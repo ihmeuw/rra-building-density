@@ -1,0 +1,18 @@
+{
+  "template": "https://github.com/collijk/python-package-cookiecutter",
+  "commit": "8e2aaf58b416eecf27f0021e9ee770a34688fff9",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "author_name": "James Collins",
+      "author_email": "collijk@uw.edu",
+      "github_username": "collijk",
+      "project_name": "RRA Building Density",
+      "project_slug": "rra-building-density",
+      "package_name": "rra_building_density",
+      "project_short_description": "Extraction and processing pipelines for a variety of building density products.",
+      "_template": "https://github.com/collijk/python-package-cookiecutter"
+    }
+  },
+  "directory": null
+}
