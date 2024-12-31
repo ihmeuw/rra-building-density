@@ -2,8 +2,8 @@ import click
 
 from rra_building_density import (
     extract,
-    format,
     postprocess,
+    process,
 )
 
 
@@ -17,7 +17,7 @@ def bdtask() -> None:
     """Run an individual modeling task in the building density pipeline."""
 
 
-for module in [extract, format, postprocess]:
+for module in [extract, process, postprocess]:
     runners = getattr(module, "RUNNERS", {})
     task_runners = getattr(module, "TASK_RUNNERS", {})
 

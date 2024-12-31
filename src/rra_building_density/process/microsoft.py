@@ -3,10 +3,10 @@ import rasterra as rt
 from affine import Affine
 from rra_tools import jobmon
 
-from rra_building_density.data import BuildingDensityData
 from rra_building_density import cli_options as clio
 from rra_building_density import constants as bdc
 from rra_building_density import utils
+from rra_building_density.data import BuildingDensityData
 
 
 def format_microsoft_main(
@@ -30,7 +30,7 @@ def format_microsoft_main(
     block_template = utils.make_raster_template(
         block_poly,
         resolution=tile_index_info.tile_resolution,
-        crs=bdc.CRSES["equal_area"].to_pyproj(),
+        crs=bdc.CRSES["equal_area"],
     )
 
     overlapping = msft_index.intersects(block_poly_msft)
@@ -119,7 +119,7 @@ def format_microsoft_task(
 @clio.with_output_directory(bdc.MODEL_ROOT)
 @clio.with_queue()
 def format_microsoft(
-    time_point: list[str],
+    time_point: str,
     version: str,
     resolution: str,
     output_dir: str,
@@ -127,7 +127,7 @@ def format_microsoft(
 ) -> None:
     """Format Microsoft building density data."""
     valid_time_points = bdc.MICROSOFT_TIME_POINTS[version]
-    time_point = clio.convert_choice(time_point, valid_time_points)
+    time_points = clio.convert_choice(time_point, valid_time_points)
 
     bd_data = BuildingDensityData(output_dir)
 
@@ -135,7 +135,7 @@ def format_microsoft(
     tile_index = bd_data.load_tile_index(resolution)
     block_keys = tile_index.block_key.unique().tolist()
 
-    njobs = len(block_keys) * len(time_point)
+    njobs = len(block_keys) * len(time_points)
     print(f"Formating building density for {njobs} block-times")
 
     memory, runtime = {
@@ -146,7 +146,7 @@ def format_microsoft(
     }[resolution]
 
     jobmon.run_parallel(
-        task_name="format_microsoft",
+        task_name="microsoft",
         runner="bdtask process",
         task_args={
             "version": version,
@@ -155,7 +155,7 @@ def format_microsoft(
         },
         node_args={
             "block-key": block_keys,
-            "time-point": time_point,
+            "time-point": time_points,
         },
         task_resources={
             "queue": queue,

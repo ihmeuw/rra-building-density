@@ -2459,22 +2459,24 @@ requests = ">=2.0.1,<3.0.0"
 
 [[package]]
 name = "rra-tools"
-version = "1.0.17"
+version = "1.0.20"
 description = "Common utilities for IHME Rapid Response team pipelines."
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "rra_tools-1.0.17-py3-none-any.whl", hash = "sha256:f84b86a9235204b79b12302f7bf58b54760f25faeef1da06abaa6954f59d39a9"},
-    {file = "rra_tools-1.0.17.tar.gz", hash = "sha256:ffbddf359a415721f4dc28a63541d87481891af3343506223fa0971201bab005"},
+    {file = "rra_tools-1.0.20-py3-none-any.whl", hash = "sha256:bece645115b7f4683b2db82914e63e05557584f24581b2822ae60b54f68c4faf"},
+    {file = "rra_tools-1.0.20.tar.gz", hash = "sha256:5adae07db1ad4a07a3223c84ebdf3bd20f166c2b4a68dc4e0f514168ae9e6850"},
 ]
 
 [package.dependencies]
 click = "*"
 deep-translator = ">=1.11.4,<2.0.0"
 loguru = ">=0.7.2,<0.8.0"
+matplotlib = ">=3.10.0,<4.0.0"
 pandas = ">=1.5"
 pathos = ">=0.3.2,<0.4.0"
 requests = ">=2.32.2,<3.0.0"
+seaborn = ">=0.13.2,<0.14.0"
 tqdm = ">=4.66.4,<5.0.0"
 
 [[package]]
@@ -2754,6 +2756,45 @@ slack = ["slack-sdk"]
 telegram = ["requests"]
 
 [[package]]
+name = "types-pyyaml"
+version = "6.0.12.20241230"
+description = "Typing stubs for PyYAML"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "types_PyYAML-6.0.12.20241230-py3-none-any.whl", hash = "sha256:fa4d32565219b68e6dee5f67534c722e53c00d1cfc09c435ef04d7353e1e96e6"},
+    {file = "types_pyyaml-6.0.12.20241230.tar.gz", hash = "sha256:7f07622dbd34bb9c8b264fe860a17e0efcad00d50b5f27e93984909d9363498c"},
+]
+
+[[package]]
+name = "types-requests"
+version = "2.32.0.20241016"
+description = "Typing stubs for requests"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "types-requests-2.32.0.20241016.tar.gz", hash = "sha256:0d9cad2f27515d0e3e3da7134a1b6f28fb97129d86b867f24d9c726452634d95"},
+    {file = "types_requests-2.32.0.20241016-py3-none-any.whl", hash = "sha256:4195d62d6d3e043a4eaaf08ff8a62184584d2e8684e9d2aa178c7915a7da3747"},
+]
+
+[package.dependencies]
+urllib3 = ">=2"
+
+[[package]]
+name = "types-tqdm"
+version = "4.67.0.20241221"
+description = "Typing stubs for tqdm"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "types_tqdm-4.67.0.20241221-py3-none-any.whl", hash = "sha256:a1f1c9cda5c2d8482d2c73957a5398bfdedda10f6bc7b3b4e812d5c910486d29"},
+    {file = "types_tqdm-4.67.0.20241221.tar.gz", hash = "sha256:e56046631056922385abe89aeb18af5611f471eadd7918a0ad7f34d84cd4c8cc"},
+]
+
+[package.dependencies]
+types-requests = "*"
+
+[[package]]
 name = "typing-extensions"
 version = "4.12.2"
 description = "Backported and Experimental Type Hints for Python 3.8+"
@@ -2882,4 +2923,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.13"
-content-hash = "319e1a22688b05bbfe0d46b4ac3e4e846e09d38fbab388ba3e301d4da2aa18a7"
+content-hash = "f45342bb33d01032b2af7b8b5bdf4dd6068e5777357ea843ac4b31578ff50d2c"

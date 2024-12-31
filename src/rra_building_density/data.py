@@ -1,6 +1,6 @@
 import itertools
-from typing import Any
 from pathlib import Path
+from typing import Any
 
 import geopandas as gpd
 import rasterra as rt
@@ -8,7 +8,6 @@ import shapely
 import yaml
 from pydantic import BaseModel
 from rra_tools.shell_tools import mkdir, touch
-
 
 from rra_building_density import constants as bdc
 

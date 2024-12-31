@@ -9,15 +9,16 @@ import geopandas as gpd
 from rra_tools import jobmon
 from rra_tools.shell_tools import mkdir
 
-from rra_building_density.data import BuildingDensityData
 from rra_building_density import cli_options as clio
 from rra_building_density import constants as bdc
+from rra_building_density.data import BuildingDensityData
 
 
 def extract_microsoft_indices_main(
     version: str,
     output_dir: str,
-    overwrite: bool,  
+    *,
+    overwrite: bool,
 ) -> None:
     bd_data = BuildingDensityData(output_dir)
     blob_url, blob_key = bd_data.blob_credentials
@@ -46,6 +47,7 @@ def extract_microsoft_tiles_main(
     time_point: str,
     version: str,
     output_dir: str | Path,
+    *,
     overwrite: bool,
     verbose: bool,
 ) -> None:
@@ -82,7 +84,7 @@ def extract_microsoft_tiles_main(
 
 def _run_azcopy_subprocess(azcopy_command_str: str, *, verbose: bool = False) -> None:
     if verbose:
-        process = subprocess.Popen(
+        process = subprocess.Popen(  # noqa: S603
             shlex.split(azcopy_command_str),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -106,7 +108,7 @@ def _run_azcopy_subprocess(azcopy_command_str: str, *, verbose: bool = False) ->
         stderr_output, _ = process.communicate()
         print(stderr_output, file=sys.stderr)
     else:
-        subprocess.run(shlex.split(azcopy_command_str), check=True)
+        subprocess.run(shlex.split(azcopy_command_str), check=True)  # noqa: S603
 
 
 @click.command()  # type: ignore[arg-type]
@@ -118,10 +120,10 @@ def extract_microsoft_indices_task(
     dummy: int,  # noqa: ARG001
     version: str,
     output_dir: str,
-    overwrite: bool,
+    overwrite: bool,  # noqa: FBT001
 ) -> None:
     """Cache building density indices."""
-    extract_microsoft_indices_main(version, output_dir, overwrite)
+    extract_microsoft_indices_main(version, output_dir, overwrite=overwrite)
 
 
 @click.command()  # type: ignore[arg-type]
@@ -134,11 +136,13 @@ def extract_microsoft_tiles_task(
     time_point: str,
     version: str,
     output_dir: str,
-    overwrite: bool,
-    verbose: bool,
+    overwrite: bool,  # noqa: FBT001
+    verbose: bool,  # noqa: FBT001
 ) -> None:
     """Cache building density tiles for a particular year and quarter."""
-    extract_microsoft_tiles_main(time_point, version, output_dir, overwrite, verbose)
+    extract_microsoft_tiles_main(
+        time_point, version, output_dir, overwrite=overwrite, verbose=verbose
+    )
 
 
 @click.command()  # type: ignore[arg-type]
@@ -151,12 +155,12 @@ def extract_microsoft(
     time_point: str,
     version: str,
     output_dir: str,
-    overwrite: bool,
+    overwrite: bool,  # noqa: FBT001
     queue: str,
 ) -> None:
     """Cache building density tiles and indices."""
     valid_time_points = bdc.MICROSOFT_TIME_POINTS[version]
-    time_point = clio.convert_choice(time_point, valid_time_points)
+    time_points = clio.convert_choice(time_point, valid_time_points)
 
     bd_data = BuildingDensityData(output_dir)
     provider_root = bd_data.provider_root(f"microsoft_v{version}")
@@ -186,13 +190,12 @@ def extract_microsoft(
         },
     )
 
-
     tile_tasks = jobmon.build_parallel_task_graph(
         jobmon_tool=tool,
         runner="bdtask extract",
         task_name="microsoft",
         node_args={
-            "time-point": time_point,
+            "time-point": time_points,
         },
         task_args=task_args,
         task_resources={

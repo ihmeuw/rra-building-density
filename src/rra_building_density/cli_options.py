@@ -80,6 +80,7 @@ def with_time_point(
         convert=choices is not None and allow_all,
     )
 
+
 def with_version(
     choices: Collection[str],
     *,
@@ -93,8 +94,9 @@ def with_version(
         convert=allow_all,
     )
 
+
 def with_tile_size() -> ClickOption[_P, _T]:
-    return ClickOption(
+    return click.option(
         "--tile-size",
         type=int,
         default=512,
@@ -102,14 +104,16 @@ def with_tile_size() -> ClickOption[_P, _T]:
         show_default=True,
     )
 
+
 def with_block_size() -> ClickOption[_P, _T]:
-    return ClickOption(
+    return click.option(
         "--block-size",
         type=int,
         default=16,
         help="The number of tiles in each block dimension",
         show_default=True,
     )
+
 
 def with_block_key() -> ClickOption[_P, _T]:
     return click.option(
@@ -120,8 +124,9 @@ def with_block_key() -> ClickOption[_P, _T]:
         help="Block key of block to run.",
     )
 
+
 def with_resolution(
-    choices: Collection[int],
+    choices: Collection[str],
     *,
     allow_all: bool = False,
 ) -> ClickOption[_P, _T]:

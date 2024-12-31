@@ -3,20 +3,20 @@ import itertools
 import click
 import geopandas as gpd
 import tqdm
-from shapely import box
 from rra_tools import jobmon
+from shapely import box
 
 from rra_building_density import cli_options as clio
 from rra_building_density import constants as bdc
 from rra_building_density.data import BuildingDensityData, TileIndexInfo
 
 
-
-def prepare_tile_index_main(
+def tile_index_main(
     tile_size: int,
     block_size: int,
     resolution: int | str,
     output_dir: str,
+    *,
     progress_bar: bool,
 ) -> None:
     """Build the global tile index.
@@ -34,7 +34,7 @@ def prepare_tile_index_main(
     crs = bdc.CRSES["equal_area"]
     xmin, ymin, xmax, ymax = crs.bounds
 
-    tile_span = resolution * tile_size  # Size of the tile in the units of the crs
+    tile_span = int(resolution) * tile_size  # Size of the tile in the units of the crs
     height, width = (ymax - ymin), (xmax - xmin)
     nx = int(width // tile_span + (width % tile_span and 1))
     ny = int(height // tile_span + (width % tile_span and 1))
@@ -72,26 +72,26 @@ def prepare_tile_index_main(
     bd_data.save_tile_index(modeling_frame, modeling_frame_info)
 
 
-@click.command()
+@click.command()  # type: ignore[arg-type]
 @clio.with_tile_size()
 @clio.with_block_size()
 @clio.with_resolution(bdc.RESOLUTIONS)
 @clio.with_output_directory(bdc.MODEL_ROOT)
 @clio.with_progress_bar()
-def prepare_tile_index_task(
+def tile_index_task(
     tile_size: int,
     block_size: int,
     resolution: str,
     output_dir: str,
-    progress_bar: bool,
+    progress_bar: bool,  # noqa: FBT001
 ) -> None:
     """Build the global tile index."""
-    prepare_tile_index_main(
+    tile_index_main(
         tile_size,
         block_size,
         resolution,
         output_dir,
-        progress_bar,
+        progress_bar=progress_bar,
     )
 
 
@@ -101,7 +101,7 @@ def prepare_tile_index_task(
 @clio.with_resolution(bdc.RESOLUTIONS, allow_all=True)
 @clio.with_output_directory(bdc.MODEL_ROOT)
 @clio.with_queue()
-def prepare_tile_index(
+def tile_index(
     tile_size: int,
     block_size: int,
     resolution: list[str],
@@ -111,14 +111,14 @@ def prepare_tile_index(
     """Build the global tile index."""
     bd_data = BuildingDensityData(output_dir)
     jobmon.run_parallel(
-        task_name="prepare_tile_index",
-        runner="bdtask format",
+        task_name="tile_index",
+        runner="bdtask process",
         task_args={
             "output-dir": output_dir,
         },
         node_args={
-            "tile_size": tile_size,
-            "block_size": block_size,
+            "tile_size": [tile_size],
+            "block_size": [block_size],
             "resolution": resolution,
         },
         task_resources={

@@ -1,11 +1,12 @@
-import rasterra as rt
+import geopandas as gpd
 import numpy as np
+import rasterra as rt
 import shapely
 from affine import Affine
 from pyproj import Transformer
-import geopandas as gpd
 
 from rra_building_density import constants as bdc
+
 
 def make_raster_template(
     bounding_box: shapely.Polygon,

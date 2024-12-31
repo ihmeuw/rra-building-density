@@ -1,6 +1,5 @@
 import click
 import numpy as np
-from pyproj import CRS
 from rra_tools import jobmon
 
 from rra_building_density import cli_options as clio
@@ -28,12 +27,14 @@ def format_ghsl_main(
     block_index = tile_index[tile_index.block_key == block_key]
     block_poly_series = block_index.dissolve("block_key").geometry
     block_poly = block_poly_series.iloc[0]
-    block_poly_ghsl = utils.bbox_safe_buffer(block_poly_series, 5000).to_crs(crs_pyproj).iloc[0]
+    block_poly_ghsl = (
+        utils.bbox_safe_buffer(block_poly_series, 5000).to_crs(crs_pyproj).iloc[0]
+    )
 
     block_template = utils.make_raster_template(
         block_poly,
         resolution=tile_index_info.tile_resolution,
-        crs=bdc.CRSES["equal_area"].to_pyproj(),
+        crs=bdc.CRSES["equal_area"],
     )
 
     year = int(time_point[:4])
@@ -121,7 +122,7 @@ def format_ghsl(
 
     jobmon.run_parallel(
         task_name="ghsl",
-        runner="bdtask format",
+        runner="bdtask process",
         task_args={
             "output-dir": output_dir,
             "resolution": resolution,

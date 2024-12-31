@@ -1,11 +1,11 @@
 from rra_building_density.extract.ghsl import (
-    extract_ghsl_task,
     extract_ghsl,
+    extract_ghsl_task,
 )
 from rra_building_density.extract.microsoft import (
+    extract_microsoft,
     extract_microsoft_indices_task,
     extract_microsoft_tiles_task,
-    extract_microsoft,
 )
 
 RUNNERS = {

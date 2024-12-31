@@ -1,3 +1,4 @@
+# ruff: noqa
 # mypy: ignore-errors
 import uuid
 from pathlib import Path
@@ -11,14 +12,6 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from rra_tools import jobmon
-
-from rra_population_pipelines.pipelines.models.people_per_structure.data import (
-    DEFAULT_MODEL_ROOT,
-    PeoplePerStructureData,
-)
-from rra_population_pipelines.shared.cli_tools import options as clio
-from rra_population_pipelines.shared.data import GEOSPATIAL
-from rra_population_pipelines.shared.plot_utils import strip_axes
 
 TITLE_FONTSIZE = 24
 AX_TITLE_FONTSIZE = 20

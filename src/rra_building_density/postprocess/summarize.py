@@ -2,17 +2,14 @@
 from pathlib import Path
 
 import click
-import geopandas as gpd
-from mercantile import tile
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 from rra_tools import jobmon, parallel
 
-from rra_building_density.data import BuildingDensityData
 from rra_building_density import cli_options as clio
 from rra_building_density import constants as bdc
-
+from rra_building_density.data import BuildingDensityData
 
 
 def get_quad_array(
@@ -26,7 +23,7 @@ def get_quad_array(
         return np.nan * np.ones((512, 512))
 
 
-def compute_quad_stats(tile_key: str) -> pd.DataFrame:    
+def compute_quad_stats(tile_key: str) -> pd.DataFrame:
     bd_data = BuildingDensityData()
 
     idx_cols = ["tile_key", "time_point"]
@@ -114,6 +111,7 @@ def summarize_main(
     block_key: str,
     output_dir: str | Path,
     num_cores: int,
+    *,
     progress_bar: bool,
 ) -> pd.DataFrame:
     bd_data = BuildingDensityData(output_dir)
@@ -140,14 +138,14 @@ def summarize_task(
     block_key: str,
     output_dir: str,
     num_cores: int,
-    progress_bar: bool,
+    progress_bar: bool,  # noqa: FBT001
 ) -> None:
     """Summarize building density by tile for a block of tiles."""
     summarize_main(
         block_key,
         output_dir,
         num_cores,
-        progress_bar,
+        progress_bar=progress_bar,
     )
 
 

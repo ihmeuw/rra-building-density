@@ -13,10 +13,11 @@ from rra_building_density.data import BuildingDensityData
 
 
 def extract_ghsl_main(
-    crs: str, 
-    raw_measure: str, 
-    year: str, 
-    output_dir: str, 
+    crs: str,
+    raw_measure: str,
+    year: str,
+    output_dir: str,
+    *,
     progress_bar: bool,
 ) -> None:
     bd_data = BuildingDensityData(output_dir)
@@ -24,8 +25,8 @@ def extract_ghsl_main(
     mkdir(provider_root, exist_ok=True)
     out_zipfile = provider_root / f"{crs}_{raw_measure}_{year}.zip"
 
-    resolution = bdc.CRS_MAP[crs]
-    measure_prefix, measure = bdc.MEASURE_MAP[raw_measure]
+    resolution = bdc.GHSL_CRS_MAP[crs]
+    measure_prefix, measure = bdc.GHSL_MEASURE_MAP[raw_measure]
 
     url_root = "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/GHSL"
     url = f"{url_root}/GHS_{measure_prefix}_GLOBE_R2023A/GHS_{measure}_E{year}_GLOBE_R2023A_{resolution}/V1-0/GHS_{measure}_E{year}_GLOBE_R2023A_{resolution}_V1_0.zip"
@@ -67,9 +68,9 @@ def extract_ghsl_task(
     progress_bar: bool,  # noqa: FBT001
 ) -> None:
     """Extract GHSL data for a given year and measure."""
-    extract_ghsl_main(crs, measure, year, output_dir, progress_bar)
+    extract_ghsl_main(crs, measure, year, output_dir, progress_bar=progress_bar)
 
- 
+
 @click.command()  # type: ignore[arg-type]
 @clio.with_crs(bdc.GHSL_CRS_MAP, allow_all=True)
 @clio.with_measure(bdc.GHSL_MEASURE_MAP, allow_all=True)
