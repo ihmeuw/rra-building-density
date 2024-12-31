@@ -1,4 +1,5 @@
 import itertools
+import warnings
 from pathlib import Path
 
 import pyproj
@@ -54,17 +55,19 @@ class CRS(BaseModel):
     @model_validator(mode="after")
     def validate_code_and_proj_string(self) -> "CRS":
         if self.code and self.proj_string:
-            code_proj = pyproj.CRS.from_user_input(self.code)
-            proj_proj = pyproj.CRS.from_user_input(self.proj_string)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                code_proj = pyproj.CRS.from_user_input(self.code).to_proj4()
+                proj_proj = pyproj.CRS.from_user_input(self.proj_string).to_proj4()
             if code_proj != proj_proj:
                 msg = "code and proj_string must represent the same CRS."
                 raise ValueError(msg)
         return self
 
     def to_pyproj(self) -> pyproj.CRS:
-        if self.proj_string:
-            return pyproj.CRS.from_proj4(self.proj_string)
-        return pyproj.CRS.from_user_input(self.code)
+        if self.code:
+            return pyproj.CRS.from_user_input(self.code)
+        return pyproj.CRS.from_user_input(self.proj_string)
 
 
 CRSES: dict[str, CRS] = {

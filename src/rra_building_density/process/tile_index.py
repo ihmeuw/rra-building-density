@@ -60,7 +60,7 @@ def tile_index_main(
         data.append([block_key, tile_key, tile_poly])
 
     columns = ["block_key", "tile_key", "geometry"]
-    modeling_frame = gpd.GeoDataFrame(data, columns=columns, crs=crs)
+    modeling_frame = gpd.GeoDataFrame(data, columns=columns, crs=crs.to_pyproj())
 
     print("Saving")
     modeling_frame_info = TileIndexInfo(
@@ -117,8 +117,8 @@ def tile_index(
             "output-dir": output_dir,
         },
         node_args={
-            "tile_size": [tile_size],
-            "block_size": [block_size],
+            "tile-size": [tile_size],
+            "block-size": [block_size],
             "resolution": resolution,
         },
         task_resources={

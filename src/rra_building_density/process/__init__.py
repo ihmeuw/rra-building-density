@@ -18,7 +18,7 @@ RUNNERS = {
 }
 
 TASK_RUNNERS = {
-    "prepare_tile_index": tile_index_task,
+    "tile_index": tile_index_task,
     "ghsl": format_ghsl_task,
     "microsoft": format_microsoft_task,
 }
