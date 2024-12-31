@@ -7,7 +7,7 @@ from pydantic import BaseModel, model_validator
 RRA_ROOT = Path("/mnt/team/rapidresponse/")
 RRA_CREDENTIALS_ROOT = RRA_ROOT / "priv" / "shared" / "credentials"
 RRA_BINARIES_ROOT = RRA_ROOT / "priv" / "shared" / "bin"
-MODEL_ROOT = RRA_ROOT / "pub" / "building_density"
+MODEL_ROOT = RRA_ROOT / "pub" / "building-density"
 
 GHSL_CRS_MAP = {
     "mollweide": "54009_100",
