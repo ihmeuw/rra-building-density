@@ -44,6 +44,7 @@ scipy = "^1.14.1"
 seaborn = "^0.13.2"
 rasterra = "^0.6.1"
 pydantic = "^2.10.4"
+pyarrow = "^18.1.0"
 
 [tool.poetry.group.dev.dependencies]
 mkdocstrings = {version = "*", extras = ["python"]}
