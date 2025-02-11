@@ -2519,13 +2519,13 @@ requests = ">=2.0.1,<3.0.0"
 
 [[package]]
 name = "rra-tools"
-version = "1.0.22"
+version = "1.0.23"
 description = "Common utilities for IHME Rapid Response team pipelines."
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "rra_tools-1.0.22-py3-none-any.whl", hash = "sha256:abed2b67fcb9e3a7860fa5bf4ce9119eb4599bf1bcd234f1b6d6c095b3410d85"},
-    {file = "rra_tools-1.0.22.tar.gz", hash = "sha256:ff902231e4d046ff1327cd55d46affb8c7b7f2b0f35c7e50805a33609e715f34"},
+    {file = "rra_tools-1.0.23-py3-none-any.whl", hash = "sha256:6ce89a4ae65f337753f9426601e96b9481fee3eaec153f9c2c1a29e60ac31752"},
+    {file = "rra_tools-1.0.23.tar.gz", hash = "sha256:68dacb86ac60727e1f942d364d6f7f3695d993bc1b096360ecc38fda2827bb81"},
 ]
 
 [package.dependencies]
@@ -2983,4 +2983,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.13"
-content-hash = "63dcd72c21cb4608dc9935001ca8ac1797abf6f0acb28dd35d70bca0b198968f"
+content-hash = "8d38d2e6c1ea8d19e41547041fdbc67bf9423d4d8528774f9a276d5873a5cc45"
