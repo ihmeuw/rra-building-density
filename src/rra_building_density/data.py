@@ -44,6 +44,13 @@ class BuildingDensityData:
         return self._root
 
     @property
+    def logs(self) -> Path:
+        return self.root / "logs"
+
+    def log_dir(self, step_name: str) -> Path:
+        return self.logs / step_name
+
+    @property
     def credentials_root(self) -> Path:
         return self._credentials_root
 
@@ -114,7 +121,7 @@ class BuildingDensityData:
         pattern = {
             "microsoft_v2": "{root}/{time_point}/tiles/{time_point}_{tile_key}.tif",
             "microsoft_v3": "{root}/{time_point}/tiles/{time_point}_{tile_key}.tif",
-            "microsoft_v4": "{root}/{time_point}/tiles/{time_point}_{tile_key}.tif",
+            "microsoft_v4": "{root}/{time_point}/tiles/{tile_key}.tif",
             "ghsl_r2023a": "{root}/GHS_{measure}_E{year}_GLOBE_R2023A_{resolution}_V1_0.tif",
         }
         path = pattern[provider].format(root=root, **kwargs)
@@ -128,9 +135,7 @@ class BuildingDensityData:
     ) -> None:
         cache_path = self.provider_index_cache_path(provider, index_name)
         mkdir(cache_path.parent, exist_ok=True)
-        if cache_path.exists():
-            cache_path.unlink()
-        touch(cache_path)
+        touch(cache_path, clobber=True)
         index.to_parquet(cache_path)
 
     def load_provider_index(self, provider: str, index_name: str) -> gpd.GeoDataFrame:
@@ -232,11 +237,11 @@ class BuildingDensityData:
         mkdir(root, exist_ok=True)
 
         tile_index_path = root / "tile_index.parquet"
-        touch(tile_index_path, exist_ok=True)
+        touch(tile_index_path, clobber=True)
         tile_index.to_parquet(tile_index_path)
 
         tile_index_info_path = root / "tile_index_info.yaml"
-        touch(tile_index_info_path, exist_ok=True)
+        touch(tile_index_info_path, clobber=True)
         with tile_index_info_path.open("w") as f:
             yaml.dump(tile_index_info.model_dump(), f)
 
@@ -288,10 +293,24 @@ class BuildingDensityData:
         self._check_resolution(resolution)
         tile_path = self.tile_path(resolution, provider, block_key, time_point, measure)
         mkdir(tile_path.parent, exist_ok=True, parents=True)
-        if tile_path.exists():
-            tile_path.unlink()
-        touch(tile_path)
+        touch(tile_path, clobber=True)
         save_raster(tile, tile_path)
+
+    def link_tile(
+        self,
+        resolution: int | str,
+        provider: str,
+        block_key: str,
+        time_point: str,
+        measure: str,
+        source_path: Path,
+    ) -> None:
+        self._check_resolution(resolution)
+        dest = self.tile_path(resolution, provider, block_key, time_point, measure)
+        mkdir(dest.parent, exist_ok=True, parents=True)
+        if dest.exists():
+            dest.unlink()
+        dest.symlink_to(source_path)
 
     def load_tile(
         self,

@@ -21,9 +21,11 @@ def format_ghsl_main(
     crs_pyproj = bdc.CRSES[crs].to_pyproj()
 
     bd_data = BuildingDensityData(output_dir)
+    print("Loading the tile index")
     tile_index = bd_data.load_tile_index(resolution)
     tile_index_info = bd_data.load_tile_index_info(resolution)
 
+    print("Selecting tile and building template")
     block_index = tile_index[tile_index.block_key == block_key]
     block_poly_series = block_index.dissolve("block_key").geometry
     block_poly = block_poly_series.iloc[0]
@@ -37,6 +39,7 @@ def format_ghsl_main(
         crs=bdc.CRSES["equal_area"],
     )
 
+    print("Selecting year weight")
     year = int(time_point[:4])
     start = year - year % 5
     if year % 5 == 0:
@@ -47,6 +50,7 @@ def format_ghsl_main(
         t = float(time_point[:4]) + float(time_point[-1:]) / 4
         w = (t - start) / (end - start)
 
+    print("loading start tile")
     start_tile = bd_data.load_provider_tile(
         "ghsl_r2023a",
         bounds=block_poly_ghsl,
@@ -55,6 +59,7 @@ def format_ghsl_main(
         year=str(start),
     )
     start_tile = start_tile.astype(np.float32) / 10000.0
+    print("loading end tile")
     end_tile = bd_data.load_provider_tile(
         "ghsl_r2023a",
         bounds=block_poly_ghsl,
@@ -64,9 +69,11 @@ def format_ghsl_main(
     )
     end_tile = end_tile.astype(np.float32) / 10000.0
 
+    print("Resampling")
     raw_tile = start_tile * (1 - w) + end_tile * w
     tile = raw_tile.set_no_data_value(np.nan).resample_to(block_template, "average")
     tile = utils.suppress_noise(tile)
+    print("Saving")
     bd_data.save_tile(
         tile,
         resolution,
@@ -120,6 +127,14 @@ def format_ghsl(
     njobs = len(block_keys) * len(time_point) * len(measure)
     print(f"Formating building density for {njobs} block-times")
 
+    memory, runtime = {
+        "40": ("8G", "20m"),
+        "100": ("8G", "20m"),
+        "250": ("15G", "20m"),
+        "500": ("60G", "20m"),
+        "1000": ("250G", "45m"),
+    }[resolution]
+
     jobmon.run_parallel(
         task_name="ghsl",
         runner="bdtask process",
@@ -131,15 +146,15 @@ def format_ghsl(
             "block-key": block_keys,
             "measure": measure,
             "time-point": time_point,
-            "crs": crs,
+            "crs": [crs],
         },
         task_resources={
             "queue": queue,
             "cores": 1,
-            "memory": "8G",
-            "runtime": "20m",
+            "memory": memory,
+            "runtime": runtime,
             "project": "proj_rapidresponse",
         },
-        log_root=bd_data.tiles,
+        log_root=bd_data.log_dir("process_ghsl"),
         max_attempts=1,
     )

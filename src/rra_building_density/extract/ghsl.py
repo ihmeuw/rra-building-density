@@ -88,6 +88,7 @@ def extract_ghsl(
     bd_data = BuildingDensityData(output_dir)
     provider_root = bd_data.provider_root("ghsl_r2023a")
     mkdir(provider_root, exist_ok=True)
+    log_dir = bd_data.log_dir("extract_ghsl")
 
     jobmon.run_parallel(
         task_name="ghsl",
@@ -108,6 +109,6 @@ def extract_ghsl(
             "project": "proj_rapidresponse",
             "constraints": "archive",
         },
-        log_root=provider_root,
+        log_root=log_dir,
         max_attempts=1,
     )

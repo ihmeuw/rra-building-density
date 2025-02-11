@@ -182,5 +182,5 @@ def summarize(
             "block-key": block_keys,
         },
         max_attempts=1,
-        log_root=bd_data.summaries,
+        log_root=bd_data.log_dir("postprocess_summarize"),
     )

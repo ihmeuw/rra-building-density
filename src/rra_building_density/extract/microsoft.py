@@ -163,8 +163,8 @@ def extract_microsoft(
     time_points = clio.convert_choice(time_point, valid_time_points)
 
     bd_data = BuildingDensityData(output_dir)
-    provider_root = bd_data.provider_root(f"microsoft_v{version}")
-    log_root = jobmon.make_log_dir(provider_root)
+    main_log_dir = bd_data.log_dir("extract_msft")
+    log_root = jobmon.make_log_dir(main_log_dir)
     tool = jobmon.get_jobmon_tool("extract_microsoft_tiles")
     workflow = tool.create_workflow(f"extract_microsoft_tiles_{uuid.uuid4()}")
     task_args: dict[str, str | None] = {

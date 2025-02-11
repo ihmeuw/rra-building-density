@@ -128,6 +128,6 @@ def tile_index(
             "runtime": "60m",
             "project": "proj_rapidresponse",
         },
-        log_root=bd_data.tiles,
+        log_root=bd_data.log_dir("process_tile_index"),
         max_attempts=1,
     )
