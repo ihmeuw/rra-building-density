@@ -23,7 +23,7 @@ GHSL_MEASURE_MAP = {
 }
 
 GHSL_YEARS = [str(y) for y in range(1975, 2035, 5)]
-GHSL_TIME_POINTS = [f"{y}q1" for y in GHSL_YEARS]
+GHSL_TIME_POINTS = [f"{y}q1" for y in range(1975, 2024)]
 
 MICROSOFT_TIME_POINTS = {
     "2": [f"{y}q{q}" for q, y in itertools.product(range(1, 5), range(2018, 2024))][
@@ -122,4 +122,4 @@ CRSES: dict[str, CRS] = {
 CRSES["equal_area"] = CRSES["world_cylindrical"]
 CRSES["equal_area_anti_meridian"] = CRSES["world_cylindrical_anti_meridian"]
 
-RESOLUTIONS = ["40", "100", "1000", "5000"]
+RESOLUTIONS = ["40", "100", "250", "500", "1000"]
