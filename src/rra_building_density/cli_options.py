@@ -33,6 +33,7 @@ def with_crs(
         choices=choices,
         help="The coordinate reference system of the data to extract.",
         convert=allow_all,
+        required=True,
     )
 
 
