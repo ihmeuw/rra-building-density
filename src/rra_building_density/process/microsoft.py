@@ -17,11 +17,11 @@ def format_microsoft_main(
     resolution: int | str,
     output_dir: str,
 ) -> None:
-    provider = f"microsoft_v{version}"
+    msft_version = bdc.MICROSOFT_VERSIONS[version]
     bd_data = BuildingDensityData(output_dir)
     tile_index = bd_data.load_tile_index(resolution)
     tile_index_info = bd_data.load_tile_index_info(resolution)
-    msft_index = bd_data.load_provider_index(provider, "union")
+    msft_index = bd_data.load_provider_index(msft_version.name, "union")
 
     block_index = tile_index[tile_index.block_key == block_key]
     block_poly_series = block_index.dissolve("block_key").geometry
@@ -39,7 +39,7 @@ def format_microsoft_main(
         tile_key
         for tile_key in msft_index.loc[overlapping, "quad_name"].tolist()
         if bd_data.provider_tile_exists(
-            provider, tile_key=tile_key, time_point=time_point
+            msft_version.name, tile_key=tile_key, time_point=time_point
         )
     ]
 
@@ -48,7 +48,7 @@ def format_microsoft_main(
         bd_data.save_tile(
             block_template,
             resolution,
-            provider=provider,
+            provider=msft_version.name,
             block_key=block_key,
             time_point=time_point,
             measure="density",
@@ -58,7 +58,7 @@ def format_microsoft_main(
     bd_tiles = []
     for tile_key in msft_tile_keys:
         bd_tile = bd_data.load_provider_tile(
-            provider, tile_key=tile_key, time_point=time_point
+            msft_version.name, tile_key=tile_key, time_point=time_point
         )
         # The resolution of the MSFT tiles has too many decimal points.
         # This causes tiles slightly west of the antimeridian to cross
@@ -90,44 +90,11 @@ def format_microsoft_main(
     bd_data.save_tile(
         building_density,
         resolution,
-        provider=provider,
+        provider=msft_version.name,
         block_key=block_key,
         time_point=time_point,
         measure="density",
     )
-
-
-def link_time_points(
-    bd_data: BuildingDensityData,
-    version: str,
-    time_points: list[str],
-    resolution: int | str,
-) -> None:
-    def _to_float(tp: str) -> float:
-        year, quarter = tp.split("q")
-        return float(year) + float(quarter) / 4
-
-    all_time_points = [(tp, _to_float(tp)) for tp in bdc.ALL_TIME_POINTS]
-    src_time_points = [(tp, _to_float(tp)) for tp in time_points]
-    src_dest_time_points = []
-    for dest_tp, dest_tpf in all_time_points:
-        src_tp = sorted(src_time_points, key=lambda x: abs(x[1] - dest_tpf))[0][0]
-        if src_tp != dest_tp:
-            src_dest_time_points.append((src_tp, dest_tp))
-
-    for src_tp, dest_tp in src_dest_time_points:
-        src = bd_data.tile_path(
-            resolution, f"microsoft_v{version}", "test_block", src_tp, "density"
-        ).parent
-        dest = bd_data.tile_path(
-            resolution, f"microsoft_v{version}", "test_block", dest_tp, "density"
-        ).parent
-        if dest.exists():
-            if not dest.is_symlink():
-                msg = f"Destination {dest} exists and is not a symlink"
-                raise RuntimeError(msg)
-            dest.unlink()
-        dest.symlink_to(src)
 
 
 @click.command()  # type: ignore[arg-type]
@@ -161,8 +128,8 @@ def format_microsoft(
     queue: str,
 ) -> None:
     """Format Microsoft building density data."""
-    valid_time_points = bdc.MICROSOFT_TIME_POINTS[version]
-    time_points = clio.convert_choice(time_point, valid_time_points)
+    msft_version = bdc.MICROSOFT_VERSIONS[version]
+    time_points = clio.convert_choice(time_point, msft_version.time_points)
 
     bd_data = BuildingDensityData(output_dir)
 
@@ -173,14 +140,9 @@ def format_microsoft(
     njobs = len(block_keys) * len(time_points)
     print(f"Formating building density for {njobs} block-times")
 
-    memory, runtime = {
-        "40": ("3G", "5m"),
-        "100": ("3G", "20m"),
-        "250": ("3G", "60m"),
-        "500": ("3G", "120m"),
-    }[resolution]
+    memory, runtime = msft_version.process_resources(resolution)
 
-    status = jobmon.run_parallel(
+    jobmon.run_parallel(
         task_name="microsoft",
         runner="bdtask process",
         task_args={
@@ -202,11 +164,3 @@ def format_microsoft(
         log_root=bd_data.log_dir("process_microsoft"),
         max_attempts=3,
     )
-
-    if status != "D":
-        msg = f"Workflow failed with status {status}"
-        raise RuntimeError(msg)
-
-    if time_point == clio.RUN_ALL:
-        print("Workflow complete, linking time points")
-        link_time_points(bd_data, version, time_points, resolution)

@@ -122,7 +122,7 @@ class BuildingDensityData:
             "microsoft_v2": "{root}/{time_point}/tiles/{time_point}_{tile_key}.tif",
             "microsoft_v3": "{root}/{time_point}/tiles/{time_point}_{tile_key}.tif",
             "microsoft_v4": "{root}/{time_point}/tiles/{tile_key}.tif",
-            "ghsl_r2023a": "{root}/GHS_{measure}_E{year}_GLOBE_R2023A_{resolution}_V1_0.tif",
+            "ghsl_r2023a": "{root}/GHS_{measure}_E{year}_GLOBE_R2023A_4326_3ss_V1_0.tif",
         }
         path = pattern[provider].format(root=root, **kwargs)
         return Path(path)

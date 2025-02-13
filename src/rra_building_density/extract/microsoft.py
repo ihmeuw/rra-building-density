@@ -1,7 +1,6 @@
 import shlex
 import subprocess
 import sys
-import uuid
 from pathlib import Path
 
 import click
@@ -28,6 +27,9 @@ def extract_microsoft_indices_main(
     index_files = {
         "intersection": "intersection_tile_index.gpkg",
         "union": "union_tile_index.gpkg",
+        "land_cover": "land_cover_index.gpkg",
+        "land_cover_v2": "land_cover_index_v2.gpkg",
+        "land_cover_v3": "land_cover_index_v3.gpkg",
     }
     for index_type, index_file in index_files.items():
         print(f"Caching {index_type} index.")
@@ -43,6 +45,19 @@ def extract_microsoft_indices_main(
         bd_data.cache_provider_index(index, provider, out_name)
 
 
+@click.command()  # type: ignore[arg-type]
+@clio.with_version(bdc.MICROSOFT_VERSIONS)
+@clio.with_output_directory(bdc.MODEL_ROOT)
+@clio.with_overwrite()
+def extract_microsoft_indices_task(
+    version: str,
+    output_dir: str,
+    overwrite: bool,  # noqa: FBT001
+) -> None:
+    """Cache building density indices."""
+    extract_microsoft_indices_main(version, output_dir, overwrite=overwrite)
+
+
 def extract_microsoft_tiles_main(
     time_point: str,
     version: str,
@@ -51,21 +66,16 @@ def extract_microsoft_tiles_main(
     overwrite: bool,
     verbose: bool,
 ) -> None:
+    msft_version = bdc.MICROSOFT_VERSIONS[version]
+
     bd_data = BuildingDensityData(output_dir)
     azcopy = bd_data.azcopy_binary_path
-
     blob_url, blob_key = bd_data.blob_credentials
-    provider = f"microsoft_v{version}"
-    version_key = {
-        "2": "postprocess_v2",
-        "3": "ensemble_v3_pp",
-        "4": "v45_ensemble",
-    }[version]
-    input_root = (
-        f"{blob_url}/predictions/{time_point}/predictions/{version_key}/*?{blob_key}"
-    )
 
-    output_root = bd_data.provider_root(provider) / time_point / "tiles"
+    input_stem = msft_version.input_template.format(time_point=time_point)
+    input_root = f"{blob_url}/{input_stem}?{blob_key}"
+
+    output_root = bd_data.provider_root(msft_version.name) / time_point
     mkdir(output_root, exist_ok=True, parents=True)
 
     overwrite_flag = "true" if overwrite else "false"
@@ -112,21 +122,6 @@ def _run_azcopy_subprocess(azcopy_command_str: str, *, verbose: bool = False) ->
 
 
 @click.command()  # type: ignore[arg-type]
-@click.option("--dummy")
-@clio.with_version(bdc.MICROSOFT_VERSIONS)
-@clio.with_output_directory(bdc.MODEL_ROOT)
-@clio.with_overwrite()
-def extract_microsoft_indices_task(
-    dummy: int,  # noqa: ARG001
-    version: str,
-    output_dir: str,
-    overwrite: bool,  # noqa: FBT001
-) -> None:
-    """Cache building density indices."""
-    extract_microsoft_indices_main(version, output_dir, overwrite=overwrite)
-
-
-@click.command()  # type: ignore[arg-type]
 @clio.with_time_point()
 @clio.with_version(bdc.MICROSOFT_VERSIONS)
 @clio.with_output_directory(bdc.MODEL_ROOT)
@@ -159,39 +154,23 @@ def extract_microsoft(
     queue: str,
 ) -> None:
     """Cache building density tiles and indices."""
-    valid_time_points = bdc.MICROSOFT_TIME_POINTS[version]
-    time_points = clio.convert_choice(time_point, valid_time_points)
 
+    print("Extracting Microsoft Indices...")
+    extract_microsoft_indices_main(version, output_dir, overwrite=overwrite)
+
+    print("Extracting Microsoft Tiles...")
     bd_data = BuildingDensityData(output_dir)
-    main_log_dir = bd_data.log_dir("extract_msft")
-    log_root = jobmon.make_log_dir(main_log_dir)
-    tool = jobmon.get_jobmon_tool("extract_microsoft_tiles")
-    workflow = tool.create_workflow(f"extract_microsoft_tiles_{uuid.uuid4()}")
+    msft_version = bdc.MICROSOFT_VERSIONS[version]
+    time_points = clio.convert_choice(time_point, msft_version.time_points)
+
     task_args: dict[str, str | None] = {
         "output-dir": output_dir,
         "version": version,
     }
     if overwrite:
         task_args["overwrite"] = None
-    index_task = jobmon.build_parallel_task_graph(
-        jobmon_tool=tool,
-        runner="bdtask extract",
-        task_name="microsoft_indices",
-        node_args={"dummy": [0]},
-        task_args=task_args,
-        task_resources={
-            "queue": queue,
-            "cores": 1,
-            "memory": "10G",
-            "runtime": "60m",
-            "project": "proj_rapidresponse",
-            "stdout": str(log_root / "output"),
-            "stderr": str(log_root / "error"),
-        },
-    )
 
-    tile_tasks = jobmon.build_parallel_task_graph(
-        jobmon_tool=tool,
+    jobmon.run_parallel(
         runner="bdtask extract",
         task_name="microsoft",
         node_args={
@@ -204,11 +183,9 @@ def extract_microsoft(
             "memory": "10G",
             "runtime": "240m",
             "project": "proj_rapidresponse",
-            "stdout": str(log_root / "output"),
-            "stderr": str(log_root / "error"),
+            "stdout": str(bdc.MODEL_ROOT / "output"),
+            "stderr": str(bdc.MODEL_ROOT / "error"),
         },
         max_attempts=1,
+        log_root=bd_data.log_dir("extract_msft"),
     )
-
-    workflow.add_tasks(index_task + tile_tasks)
-    jobmon.run_workflow(workflow)

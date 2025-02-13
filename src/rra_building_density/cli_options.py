@@ -52,21 +52,6 @@ def with_measure(
     )
 
 
-def with_year(
-    choices: Collection[str],
-    *,
-    allow_all: bool = False,
-) -> ClickOption[_P, _T]:
-    return with_choice(
-        "year",
-        "y",
-        allow_all=allow_all,
-        choices=choices,
-        help="The year to extract.",
-        convert=allow_all,
-    )
-
-
 def with_time_point(
     choices: Collection[str] | None = None,
     *,
@@ -161,5 +146,4 @@ __all__ = [
     "with_time_point",
     "with_verbose",
     "with_version",
-    "with_year",
 ]
