@@ -1,3 +1,4 @@
+import abc
 import itertools
 import warnings
 from enum import StrEnum
@@ -16,17 +17,15 @@ MODEL_ROOT = RRA_ROOT / "pub" / "building-density"
 class RESOLUTIONS(StrEnum):
     r40 = "40"
     r100 = "100"
-    r250 = "250"
-    r500 = "500"
 
     @classmethod
     def to_list(cls) -> list[str]:
         return [r.value for r in cls]
 
 
-class MicrosoftVersion(BaseModel):
-    provider: Literal["microsoft"] = "microsoft"
-    version: Literal["2", "3", "4", "5"]
+class BuiltVersion(BaseModel, abc.ABC):
+    provider: str
+    version: str
     time_points: list[str]
     input_template: str
     raw_output_template: str
@@ -35,12 +34,19 @@ class MicrosoftVersion(BaseModel):
     def name(self) -> str:
         return f"{self.provider}_v{self.version}"
 
+    @abc.abstractmethod
+    def process_resources(self, resolution: str) -> tuple[str, str]:
+        raise NotImplementedError
+
+
+class MicrosoftVersion(BuiltVersion):
+    provider: Literal["microsoft"] = "microsoft"
+    version: Literal["2", "3", "4", "5"]
+
     def process_resources(self, resolution: str) -> tuple[str, str]:
         return {
             RESOLUTIONS.r40: ("3G", "5m"),
             RESOLUTIONS.r100: ("3G", "20m"),
-            RESOLUTIONS.r250: ("3G", "60m"),
-            RESOLUTIONS.r500: ("3G", "120m"),
         }[RESOLUTIONS(resolution)]
 
 
@@ -76,23 +82,17 @@ MICROSOFT_VERSIONS = {
 }
 
 
-class GHSLVersion(BaseModel):
+class GHSLVersion(BuiltVersion):
     measure_map: ClassVar[dict[str, tuple[str, str]]] = {
         "density": ("BUILT_S", "BUILT_S"),
         "nonresidential_density": ("BUILT_S", "BUILT_S_NRES"),
         "volume": ("BUILT_V", "BUILT_V"),
         "nonresidential_volume": ("BUILT_V", "BUILT_V_NRES"),
     }
+
     provider: Literal["ghsl"] = "ghsl"
     version: Literal["r2023a"]
     raw_time_points: list[str]
-    time_points: list[str]
-    input_template: str
-    raw_output_template: str
-
-    @property
-    def name(self) -> str:
-        return f"{self.provider}_{self.version}"
 
     def prefix_and_measure(self, raw_measure: str) -> tuple[str, str]:
         return self.measure_map[raw_measure]
@@ -101,8 +101,6 @@ class GHSLVersion(BaseModel):
         return {
             RESOLUTIONS.r40: ("8G", "20m"),
             RESOLUTIONS.r100: ("8G", "20m"),
-            RESOLUTIONS.r250: ("15G", "20m"),
-            RESOLUTIONS.r500: ("60G", "20m"),
         }[RESOLUTIONS(resolution)]
 
 
@@ -110,9 +108,9 @@ GHSL_VERSIONS = {
     "r2023a": GHSLVersion(
         version="r2023a",
         raw_time_points=[str(y) for y in range(1975, 2035, 5)],
-        time_points=[f"{y}q1" for y in range(1975, 2025)],
+        time_points=[f"{y}q1" for y in range(1975, 2030, 5)],
         input_template="GHS_{measure_prefix}_GLOBE_R2023A/GHS_{measure}_E{year}_GLOBE_R2023A_4326_3ss/V1-0/GHS_{measure}_E{year}_GLOBE_R2023A_4326_3ss_V1_0.zip",
-        raw_output_template="{time_point}/{measure}.tif",
+        raw_output_template="GHS_{measure}_E{year}_GLOBE_R2023A_4326_3ss_V1_0.tif",
     ),
 }
 

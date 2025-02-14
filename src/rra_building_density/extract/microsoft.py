@@ -19,14 +19,18 @@ def extract_microsoft_indices_main(
     *,
     overwrite: bool,
 ) -> None:
+    msft_version = bdc.MICROSOFT_VERSIONS[version]
     bd_data = BuildingDensityData(output_dir)
+
     blob_url, blob_key = bd_data.blob_credentials
-    provider = f"microsoft_v{version}"
+    azcopy = bd_data.azcopy_binary_path
+    overwrite_flag = "true" if overwrite else "false"
 
     print("Caching building density tile indices.")
     index_files = {
         "intersection": "intersection_tile_index.gpkg",
         "union": "union_tile_index.gpkg",
+        "difference": "difference_index.gpkg",
         "land_cover": "land_cover_index.gpkg",
         "land_cover_v2": "land_cover_index_v2.gpkg",
         "land_cover_v3": "land_cover_index_v3.gpkg",
@@ -34,15 +38,25 @@ def extract_microsoft_indices_main(
     for index_type, index_file in index_files.items():
         print(f"Caching {index_type} index.")
         index_url = f"{blob_url}/{index_file}?{blob_key}"
-        out_name = f"{index_type.replace('_', '-')}"
-        cache_path = bd_data.provider_index_cache_path(provider, out_name)
-        if cache_path.exists() and not overwrite:
-            continue
-        index = gpd.read_file(index_url)
+        cache_path = bd_data.provider_index_cache_path(msft_version, index_type)
+        temp_cache_path = cache_path.with_suffix(".gpkg")
+        mkdir(cache_path.parent, exist_ok=True)
+
+        command = (
+            f"{azcopy} copy {index_url} {temp_cache_path} "
+            f"--overwrite={overwrite_flag} "
+            f"--check-md5 FailIfDifferent "
+            f"--from-to=BlobLocal "
+            f"--log-level=INFO"
+        )
+        _run_azcopy_subprocess(command, verbose=True)
+
+        index = gpd.read_file(temp_cache_path)
+        temp_cache_path.unlink()
         index["quad_name"] = index["quad"].str.replace(".tif", "")
         keep = [c for c in ["quad_name", "layers", "geometry"] if c in index]
         index = index.loc[:, keep]
-        bd_data.cache_provider_index(index, provider, out_name)
+        bd_data.cache_provider_index(index, msft_version, index_type)
 
 
 @click.command()  # type: ignore[arg-type]
@@ -75,7 +89,7 @@ def extract_microsoft_tiles_main(
     input_stem = msft_version.input_template.format(time_point=time_point)
     input_root = f"{blob_url}/{input_stem}?{blob_key}"
 
-    output_root = bd_data.provider_root(msft_version.name) / time_point
+    output_root = bd_data.provider_root(msft_version) / time_point
     mkdir(output_root, exist_ok=True, parents=True)
 
     overwrite_flag = "true" if overwrite else "false"

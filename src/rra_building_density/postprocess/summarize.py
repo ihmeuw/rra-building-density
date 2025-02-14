@@ -17,8 +17,9 @@ def get_quad_array(
     tile_key: str,
     time_point: str,
 ) -> npt.NDArray:  # type: ignore[type-arg]
-    if bd_data.provider_tile_exists("microsoft_v4", tile_key, time_point):
-        return bd_data.load_provider_tile("microsoft_v4", tile_key, time_point)
+    msft_version = bdc.MICROSOFT_VERSIONS["4"]
+    if bd_data.provider_tile_exists(msft_version, tile_key, time_point):
+        return bd_data.load_provider_tile(msft_version, tile_key, time_point)
     else:
         return np.nan * np.ones((512, 512))
 

@@ -48,7 +48,7 @@ def extract_ghsl_main(
     }
 
     bd_data = BuildingDensityData(output_dir)
-    output_root = bd_data.provider_root(ghsl_version.name) / time_point
+    output_root = bd_data.provider_root(ghsl_version) / time_point
     mkdir(output_root, exist_ok=True, parents=True)
 
     print("Downloading GHSL data...")

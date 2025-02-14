@@ -98,7 +98,7 @@ def tile_index_task(
 @click.command()  # type: ignore[arg-type]
 @clio.with_tile_size()
 @clio.with_block_size()
-@clio.with_resolution(bdc.RESOLUTIONS, allow_all=True)
+@clio.with_resolution(bdc.RESOLUTIONS.to_list(), allow_all=True)
 @clio.with_output_directory(bdc.MODEL_ROOT)
 @clio.with_queue()
 def tile_index(

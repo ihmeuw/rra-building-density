@@ -51,7 +51,7 @@ def format_ghsl_main(
 
     print("loading start tile")
     start_tile = bd_data.load_provider_tile(
-        "ghsl_r2023a",
+        ghsl_version,
         bounds=block_poly_ghsl,
         measure=ghsl_measure,
         year=str(start),
@@ -59,7 +59,7 @@ def format_ghsl_main(
     start_tile = start_tile.astype(np.float32) / 10000.0
     print("loading end tile")
     end_tile = bd_data.load_provider_tile(
-        "ghsl_r2023a",
+        ghsl_version,
         bounds=block_poly_ghsl,
         measure=ghsl_measure,
         year=str(end),

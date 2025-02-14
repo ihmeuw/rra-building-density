@@ -21,7 +21,7 @@ def format_microsoft_main(
     bd_data = BuildingDensityData(output_dir)
     tile_index = bd_data.load_tile_index(resolution)
     tile_index_info = bd_data.load_tile_index_info(resolution)
-    msft_index = bd_data.load_provider_index(msft_version.name, "union")
+    msft_index = bd_data.load_provider_index(msft_version, "union")
 
     block_index = tile_index[tile_index.block_key == block_key]
     block_poly_series = block_index.dissolve("block_key").geometry
@@ -34,12 +34,15 @@ def format_microsoft_main(
         crs=bdc.CRSES["equal_area"],
     )
 
-    overlapping = msft_index.intersects(block_poly_msft)
+    overlapping = msft_index.loc[
+        msft_index.intersects(block_poly_msft), "quad_name"
+    ].tolist()
+
     msft_tile_keys = [
         tile_key
-        for tile_key in msft_index.loc[overlapping, "quad_name"].tolist()
+        for tile_key in overlapping
         if bd_data.provider_tile_exists(
-            msft_version.name, tile_key=tile_key, time_point=time_point
+            msft_version, tile_key=tile_key, time_point=time_point
         )
     ]
 
@@ -58,7 +61,7 @@ def format_microsoft_main(
     bd_tiles = []
     for tile_key in msft_tile_keys:
         bd_tile = bd_data.load_provider_tile(
-            msft_version.name, tile_key=tile_key, time_point=time_point
+            msft_version, tile_key=tile_key, time_point=time_point
         )
         # The resolution of the MSFT tiles has too many decimal points.
         # This causes tiles slightly west of the antimeridian to cross

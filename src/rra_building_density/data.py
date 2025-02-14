@@ -1,4 +1,3 @@
-import itertools
 from pathlib import Path
 from typing import Any
 
@@ -106,122 +105,56 @@ class BuildingDensityData:
     def raw_tiles(self) -> Path:
         return self.root / "raw_tiles"
 
-    def provider_root(self, provider: str) -> Path:
-        return self.raw_tiles / provider
+    def provider_root(self, built_version: bdc.BuiltVersion) -> Path:
+        return self.raw_tiles / built_version.name
 
-    def provider_index_cache_path(self, provider: str, index_name: str) -> Path:
-        return self.provider_root(provider) / f"{index_name}_index.parquet"
+    def provider_index_cache_path(
+        self, built_version: bdc.BuiltVersion, index_name: str
+    ) -> Path:
+        return self.provider_root(built_version) / f"{index_name}_index.parquet"
 
     def provider_tile_path(
         self,
-        provider: str = "microsoft_v4",
+        built_version: bdc.BuiltVersion,
         **kwargs: str,
     ) -> Path:
-        root = self.provider_root(provider)
-        pattern = {
-            "microsoft_v2": "{root}/{time_point}/tiles/{time_point}_{tile_key}.tif",
-            "microsoft_v3": "{root}/{time_point}/tiles/{time_point}_{tile_key}.tif",
-            "microsoft_v4": "{root}/{time_point}/tiles/{tile_key}.tif",
-            "ghsl_r2023a": "{root}/GHS_{measure}_E{year}_GLOBE_R2023A_4326_3ss_V1_0.tif",
-        }
-        path = pattern[provider].format(root=root, **kwargs)
-        return Path(path)
+        root = self.provider_root(built_version)
+        stem = built_version.raw_output_template.format(**kwargs)
+        return root / stem
 
     def cache_provider_index(
         self,
         index: gpd.GeoDataFrame,
-        provider: str,
+        built_version: bdc.BuiltVersion,
         index_name: str,
     ) -> None:
-        cache_path = self.provider_index_cache_path(provider, index_name)
+        cache_path = self.provider_index_cache_path(built_version, index_name)
         mkdir(cache_path.parent, exist_ok=True)
         touch(cache_path, clobber=True)
         index.to_parquet(cache_path)
 
-    def load_provider_index(self, provider: str, index_name: str) -> gpd.GeoDataFrame:
-        """Load an index of the building density.
-
-        The index contains a "quad_name" column providing a file name for a tile of the
-        building density raster and a "geometry" column providing the geometry of the
-        tile. This index can be used to turn an administrative boundary shape into a
-        list of tiles that intersect that boundary and need to be loaded.
-
-        Parameters
-        ----------
-        provider
-            The provider of the building density data.
-        index_name
-            The name of the index.
-
-        Returns
-        -------
-        gpd.GeoDataFrame
-            A GeoDataFrame containing the building density index.
-        """
-        cache_path = self.provider_index_cache_path(provider, index_name)
+    def load_provider_index(
+        self, built_version: bdc.BuiltVersion, index_name: str
+    ) -> gpd.GeoDataFrame:
+        cache_path = self.provider_index_cache_path(built_version, index_name)
         return gpd.read_parquet(cache_path)
 
     def provider_tile_exists(
         self,
-        provider: str = "microsoft_v4",
+        built_version: bdc.BuiltVersion,
         **kwargs: str,
     ) -> bool:
-        tile_path = self.provider_tile_path(provider, **kwargs)
+        tile_path = self.provider_tile_path(built_version, **kwargs)
         return tile_path.exists()
 
     def load_provider_tile(
         self,
-        provider: str = "microsoft_v4",
+        built_version: bdc.BuiltVersion,
         bounds: shapely.Polygon | None = None,
         **kwargs: str,
     ) -> rt.RasterArray:
-        """Load a tile of the building density.
-
-        Parameters
-        ----------
-        provider
-            The provider of the building density data.
-        kwargs
-            Provider-specific keyword arguments to identify the tile.
-
-        Returns
-        -------
-        rt.RasterArray
-            A raster array containing the building density tile.
-        """
-        tile_path = self.provider_tile_path(provider, **kwargs)
+        tile_path = self.provider_tile_path(built_version, **kwargs)
         return rt.load_raster(tile_path, bounds=bounds)
-
-    def load_provider_tiles(
-        self,
-        provider: str = "microsoft_v4",
-        **kwargs: str,
-    ) -> rt.RasterArray:
-        """Load multiple tiles of the building density.
-
-        Parameters
-        ----------
-        provider
-            The provider of the building density data.
-
-        Returns
-        -------
-        rt.RasterArray
-            A raster array containing the building density tiles.
-        """
-        keys = kwargs.keys()
-        values = []
-        for v in kwargs.values():
-            if isinstance(v, list):
-                values.append(v)
-            else:
-                values.append([v])
-
-        tile_paths = []
-        for p_values in itertools.product(*values):
-            p_kwargs = dict(zip(keys, p_values, strict=True))
-            tile_paths.append(self.provider_tile_path(provider, **p_kwargs))
-        return rt.load_mf_raster(tile_paths)
 
     @property
     def tiles(self) -> Path:
