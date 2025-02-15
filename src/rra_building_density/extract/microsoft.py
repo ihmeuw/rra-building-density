@@ -89,7 +89,9 @@ def extract_microsoft_tiles_main(
     input_stem = msft_version.input_template.format(time_point=time_point)
     input_root = f"{blob_url}/{input_stem}?{blob_key}"
 
-    output_root = bd_data.provider_root(msft_version) / time_point
+    output_root = bd_data.provider_root(msft_version)
+    if time_point:
+        output_root = output_root / time_point
     mkdir(output_root, exist_ok=True, parents=True)
 
     overwrite_flag = "true" if overwrite else "false"

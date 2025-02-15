@@ -32,13 +32,13 @@ def download_ghsl_zipfile(url: str, out_zipfile: Path, *, progress_bar: bool) ->
 
 def extract_ghsl_main(
     raw_measure: str,
-    year: str,
+    time_point: str,
     output_dir: str,
     *,
     progress_bar: bool,
 ) -> None:
     ghsl_version = bdc.GHSL_VERSIONS["r2023a"]
-    time_point = f"{year}q1"
+    year = int(time_point[:4])
     measure_prefix, measure = ghsl_version.prefix_and_measure(raw_measure)
     template_kwargs = {
         "measure_prefix": measure_prefix,
@@ -57,7 +57,8 @@ def extract_ghsl_main(
     download_ghsl_zipfile(url, out_zipfile, progress_bar=progress_bar)
 
     print("Extracting GHSL data...")
-    out_file = ghsl_version.raw_output_template.format(**template_kwargs)
+    # Time point is already included in the output_root
+    out_file = ghsl_version.raw_output_template.format(**template_kwargs).split("/")[-1]
     with zipfile.ZipFile(out_zipfile, "r") as zip_ref:
         zip_ref.extract(out_file, output_root)
 
@@ -94,7 +95,7 @@ def extract_ghsl(
     bd_data = BuildingDensityData(output_dir)
 
     ghsl_version = bdc.GHSL_VERSIONS["r2023a"]
-    time_points = clio.convert_choice(time_point, ghsl_version.raw_time_points)
+    time_points = clio.convert_choice(time_point, ghsl_version.time_points)
 
     jobmon.run_parallel(
         task_name="ghsl",

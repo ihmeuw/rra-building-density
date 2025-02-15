@@ -24,7 +24,7 @@ def format_ghsl_main(
     tile_index = bd_data.load_tile_index(resolution)
     tile_index_info = bd_data.load_tile_index_info(resolution)
 
-    print("Selecting tile and building template")
+    print("Building template")
     block_index = tile_index[tile_index.block_key == block_key]
     block_poly_series = block_index.dissolve("block_key").geometry
     block_poly = block_poly_series.iloc[0]
@@ -38,36 +38,17 @@ def format_ghsl_main(
         crs=bdc.CRSES["equal_area"],
     )
 
-    print("Selecting year weight")
-    year = int(time_point[:4])
-    start = year - year % 5
-    if year % 5 == 0:
-        end = start
-        w = 1.0
-    else:
-        end = start + 5
-        t = float(time_point[:4]) + float(time_point[-1:]) / 4
-        w = (t - start) / (end - start)
-
-    print("loading start tile")
-    start_tile = bd_data.load_provider_tile(
+    print("Loading GHSL data")
+    raw_tile = bd_data.load_provider_tile(
         ghsl_version,
         bounds=block_poly_ghsl,
         measure=ghsl_measure,
-        year=str(start),
+        time_point=time_point,
+        year=time_point[:4],
     )
-    start_tile = start_tile.astype(np.float32) / 10000.0
-    print("loading end tile")
-    end_tile = bd_data.load_provider_tile(
-        ghsl_version,
-        bounds=block_poly_ghsl,
-        measure=ghsl_measure,
-        year=str(end),
-    )
-    end_tile = end_tile.astype(np.float32) / 10000.0
+    raw_tile = raw_tile.astype(np.float32) / 10000.0
 
     print("Resampling")
-    raw_tile = start_tile * (1 - w) + end_tile * w
     tile = raw_tile.set_no_data_value(np.nan).resample_to(block_template, "average")
     tile = utils.suppress_noise(tile)
     print("Saving")
@@ -82,6 +63,7 @@ def format_ghsl_main(
 
 
 @click.command()  # type: ignore[arg-type]
+@clio.with_measure(bdc.GHSLVersion.measure_map)
 @clio.with_block_key()
 @clio.with_time_point()
 @clio.with_resolution(bdc.RESOLUTIONS)
@@ -105,12 +87,14 @@ def format_ghsl_task(
 @clio.with_queue()
 def format_ghsl(
     measure: list[str],
-    time_point: list[str],
+    time_point: str,
     resolution: str,
     output_dir: str,
     queue: str,
 ) -> None:
     """Format GHSL building density data."""
+    ghsl_version = bdc.GHSL_VERSIONS["r2023a"]
+    time_points = clio.convert_choice(time_point, ghsl_version.time_points)
     bd_data = BuildingDensityData(output_dir)
 
     print("Loading the tile index")
@@ -119,13 +103,7 @@ def format_ghsl(
     njobs = len(block_keys) * len(time_point) * len(measure)
     print(f"Formating building density for {njobs} block-times")
 
-    memory, runtime = {
-        "40": ("8G", "20m"),
-        "100": ("8G", "20m"),
-        "250": ("15G", "20m"),
-        "500": ("60G", "20m"),
-        "1000": ("250G", "45m"),
-    }[resolution]
+    memory, runtime = ghsl_version.process_resources(resolution)
 
     jobmon.run_parallel(
         task_name="ghsl",
@@ -137,7 +115,7 @@ def format_ghsl(
         node_args={
             "block-key": block_keys,
             "measure": measure,
-            "time-point": time_point,
+            "time-point": time_points,
         },
         task_resources={
             "queue": queue,

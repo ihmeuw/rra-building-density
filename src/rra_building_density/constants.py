@@ -30,18 +30,18 @@ class BuiltVersion(BaseModel, abc.ABC):
     input_template: str
     raw_output_template: str
 
-    @property
-    def name(self) -> str:
-        return f"{self.provider}_v{self.version}"
-
     @abc.abstractmethod
     def process_resources(self, resolution: str) -> tuple[str, str]:
         raise NotImplementedError
 
+    @property
+    def name(self) -> str:
+        return f"{self.provider}_{self.version}"
+
 
 class MicrosoftVersion(BuiltVersion):
     provider: Literal["microsoft"] = "microsoft"
-    version: Literal["2", "3", "4", "5"]
+    version: Literal["v2", "v3", "v4", "v5", "water_mask"]
 
     def process_resources(self, resolution: str) -> tuple[str, str]:
         return {
@@ -52,7 +52,7 @@ class MicrosoftVersion(BuiltVersion):
 
 MICROSOFT_VERSIONS = {
     "2": MicrosoftVersion(
-        version="2",
+        version="v2",
         time_points=[
             f"{y}q{q}" for q, y in itertools.product(range(1, 5), range(2018, 2024))
         ][:-1],
@@ -60,24 +60,30 @@ MICROSOFT_VERSIONS = {
         raw_output_template="{time_point}/{time_point}_{tile_key}.tif",
     ),
     "3": MicrosoftVersion(
-        version="3",
+        version="v3",
         time_points=["2023q3"],
         input_template="predictions/{time_point}/predictions/ensemble_v3_pp/*",
         raw_output_template="{time_point}/{time_point}_{tile_key}.tif",
     ),
     "4": MicrosoftVersion(
-        version="4",
+        version="v4",
         time_points=["2023q4"],
         input_template="predictions/{time_point}/predictions/v45_ensemble/*",
         raw_output_template="{time_point}/{tile_key}.tif",
     ),
     "5": MicrosoftVersion(
-        version="5",
+        version="v5",
         time_points=[
             f"{y}q{q}" for q, y in itertools.product(range(1, 5), range(2020, 2024))
         ][2:],
         input_template="predictions/{time_point}/az_8_ensemble/*",
         raw_output_template="{time_point}/{tile_key}.tif",
+    ),
+    "water_mask": MicrosoftVersion(
+        version="water_mask",
+        time_points=[""],
+        input_template="permanent_or_seasonal_water/*",
+        raw_output_template="{tile_key}.tif",
     ),
 }
 
@@ -92,7 +98,6 @@ class GHSLVersion(BuiltVersion):
 
     provider: Literal["ghsl"] = "ghsl"
     version: Literal["r2023a"]
-    raw_time_points: list[str]
 
     def prefix_and_measure(self, raw_measure: str) -> tuple[str, str]:
         return self.measure_map[raw_measure]
@@ -107,10 +112,9 @@ class GHSLVersion(BuiltVersion):
 GHSL_VERSIONS = {
     "r2023a": GHSLVersion(
         version="r2023a",
-        raw_time_points=[str(y) for y in range(1975, 2035, 5)],
         time_points=[f"{y}q1" for y in range(1975, 2030, 5)],
         input_template="GHS_{measure_prefix}_GLOBE_R2023A/GHS_{measure}_E{year}_GLOBE_R2023A_4326_3ss/V1-0/GHS_{measure}_E{year}_GLOBE_R2023A_4326_3ss_V1_0.zip",
-        raw_output_template="GHS_{measure}_E{year}_GLOBE_R2023A_4326_3ss_V1_0.tif",
+        raw_output_template="{time_point}/GHS_{measure}_E{year}_GLOBE_R2023A_4326_3ss_V1_0.tif",
     ),
 }
 

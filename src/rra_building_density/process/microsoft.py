@@ -9,6 +9,8 @@ from rra_building_density import constants as bdc
 from rra_building_density import utils
 from rra_building_density.data import BuildingDensityData
 
+USE_WATER_MASK = False
+
 
 def format_microsoft_main(
     block_key: str,
@@ -63,6 +65,7 @@ def format_microsoft_main(
         bd_tile = bd_data.load_provider_tile(
             msft_version, tile_key=tile_key, time_point=time_point
         )
+
         # The resolution of the MSFT tiles has too many decimal points.
         # This causes tiles slightly west of the antimeridian to cross
         # over and really mucks up reprojection. We'll clip the values
@@ -80,6 +83,14 @@ def format_microsoft_main(
             f=ymax,
         )
         bd_tile = bd_tile.unset_no_data_value().set_no_data_value(np.nan)
+        if USE_WATER_MASK:
+            # mask out water
+            mask_version = bdc.MICROSOFT_VERSIONS["water_mask"]
+            mask = bd_data.load_provider_tile(
+                mask_version, tile_key=tile_key
+            ).to_numpy()
+            bd_tile._ndarray[mask] = np.nan  # noqa: SLF001
+
         reprojected_tile = bd_tile.reproject(
             dst_resolution=block_template.x_resolution,
             dst_crs=block_template.crs,
@@ -131,6 +142,10 @@ def format_microsoft(
     queue: str,
 ) -> None:
     """Format Microsoft building density data."""
+    if version == "water_mask":
+        msg = "Formatting can't be run on water mask"
+        raise NotImplementedError(msg)
+
     msft_version = bdc.MICROSOFT_VERSIONS[version]
     time_points = clio.convert_choice(time_point, msft_version.time_points)
 
