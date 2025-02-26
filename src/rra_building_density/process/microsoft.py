@@ -111,7 +111,7 @@ def format_microsoft_main(
     )
 
 
-@click.command()  # type: ignore[arg-type]
+@click.command()
 @clio.with_block_key()
 @clio.with_time_point()
 @clio.with_version(bdc.MICROSOFT_VERSIONS)
@@ -128,7 +128,7 @@ def format_microsoft_task(
     format_microsoft_main(block_key, time_point, version, resolution, output_dir)
 
 
-@click.command()  # type: ignore[arg-type]
+@click.command()
 @clio.with_time_point(allow_all=True)
 @clio.with_version(bdc.MICROSOFT_VERSIONS)
 @clio.with_resolution(bdc.RESOLUTIONS)

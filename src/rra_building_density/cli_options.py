@@ -1,10 +1,8 @@
-from collections.abc import Collection
-from typing import ParamSpec, TypeVar
+from collections.abc import Callable, Collection
 
 import click
 from rra_tools.cli_tools import (
     RUN_ALL,
-    ClickOption,
     convert_choice,
     with_choice,
     with_debugger,
@@ -18,15 +16,12 @@ from rra_tools.cli_tools import (
     with_verbose,
 )
 
-_T = TypeVar("_T")
-_P = ParamSpec("_P")
 
-
-def with_crs(
+def with_crs[**P, T](
     choices: Collection[str],
     *,
     allow_all: bool = False,
-) -> ClickOption[_P, _T]:
+) -> Callable[[Callable[P, T]], Callable[P, T]]:
     return with_choice(
         "crs",
         allow_all=allow_all,
@@ -37,11 +32,11 @@ def with_crs(
     )
 
 
-def with_measure(
+def with_measure[**P, T](
     choices: Collection[str],
     *,
     allow_all: bool = False,
-) -> ClickOption[_P, _T]:
+) -> Callable[[Callable[P, T]], Callable[P, T]]:
     return with_choice(
         "measure",
         "m",
@@ -52,11 +47,11 @@ def with_measure(
     )
 
 
-def with_time_point(
+def with_time_point[**P, T](
     choices: Collection[str] | None = None,
     *,
     allow_all: bool = False,
-) -> ClickOption[_P, _T]:
+) -> Callable[[Callable[P, T]], Callable[P, T]]:
     return with_choice(
         "time_point",
         "t",
@@ -67,11 +62,11 @@ def with_time_point(
     )
 
 
-def with_version(
+def with_version[**P, T](
     choices: Collection[str],
     *,
     allow_all: bool = False,
-) -> ClickOption[_P, _T]:
+) -> Callable[[Callable[P, T]], Callable[P, T]]:
     return with_choice(
         "version",
         allow_all=allow_all,
@@ -81,7 +76,7 @@ def with_version(
     )
 
 
-def with_tile_size() -> ClickOption[_P, _T]:
+def with_tile_size[**P, T]() -> Callable[[Callable[P, T]], Callable[P, T]]:
     return click.option(
         "--tile-size",
         type=int,
@@ -91,7 +86,7 @@ def with_tile_size() -> ClickOption[_P, _T]:
     )
 
 
-def with_block_size() -> ClickOption[_P, _T]:
+def with_block_size[**P, T]() -> Callable[[Callable[P, T]], Callable[P, T]]:
     return click.option(
         "--block-size",
         type=int,
@@ -101,7 +96,7 @@ def with_block_size() -> ClickOption[_P, _T]:
     )
 
 
-def with_block_key() -> ClickOption[_P, _T]:
+def with_block_key[**P, T]() -> Callable[[Callable[P, T]], Callable[P, T]]:
     return click.option(
         "--block-key",
         "-b",
@@ -111,11 +106,11 @@ def with_block_key() -> ClickOption[_P, _T]:
     )
 
 
-def with_resolution(
+def with_resolution[**P, T](
     choices: Collection[str],
     *,
     allow_all: bool = False,
-) -> ClickOption[_P, _T]:
+) -> Callable[[Callable[P, T]], Callable[P, T]]:
     return with_choice(
         "resolution",
         allow_all=allow_all,
@@ -126,7 +121,6 @@ def with_resolution(
 
 __all__ = [
     "RUN_ALL",
-    "ClickOption",
     "convert_choice",
     "with_block_key",
     "with_block_size",

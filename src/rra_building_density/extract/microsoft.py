@@ -59,7 +59,7 @@ def extract_microsoft_indices_main(
         bd_data.cache_provider_index(index, msft_version, index_type)
 
 
-@click.command()  # type: ignore[arg-type]
+@click.command()
 @clio.with_version(bdc.MICROSOFT_VERSIONS)
 @clio.with_output_directory(bdc.MODEL_ROOT)
 @clio.with_overwrite()
@@ -137,7 +137,7 @@ def _run_azcopy_subprocess(azcopy_command_str: str, *, verbose: bool = False) ->
         subprocess.run(shlex.split(azcopy_command_str), check=True)  # noqa: S603
 
 
-@click.command()  # type: ignore[arg-type]
+@click.command()
 @clio.with_time_point()
 @clio.with_version(bdc.MICROSOFT_VERSIONS)
 @clio.with_output_directory(bdc.MODEL_ROOT)
@@ -156,7 +156,7 @@ def extract_microsoft_tiles_task(
     )
 
 
-@click.command()  # type: ignore[arg-type]
+@click.command()
 @clio.with_time_point(allow_all=True)
 @clio.with_version(bdc.MICROSOFT_VERSIONS)
 @clio.with_output_directory(bdc.MODEL_ROOT)
