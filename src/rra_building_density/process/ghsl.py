@@ -62,7 +62,7 @@ def format_ghsl_main(
     )
 
 
-@click.command()  # type: ignore[arg-type]
+@click.command()
 @clio.with_measure(bdc.GHSLVersion.measure_map)
 @clio.with_block_key()
 @clio.with_time_point()
@@ -79,7 +79,7 @@ def format_ghsl_task(
     format_ghsl_main(block_key, measure, time_point, resolution, output_dir)
 
 
-@click.command()  # type: ignore[arg-type]
+@click.command()
 @clio.with_measure(bdc.GHSLVersion.measure_map, allow_all=True)
 @clio.with_time_point(allow_all=True)
 @clio.with_resolution(bdc.RESOLUTIONS)

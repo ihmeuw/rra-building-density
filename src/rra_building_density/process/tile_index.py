@@ -72,7 +72,7 @@ def tile_index_main(
     bd_data.save_tile_index(modeling_frame, modeling_frame_info)
 
 
-@click.command()  # type: ignore[arg-type]
+@click.command()
 @clio.with_tile_size()
 @clio.with_block_size()
 @clio.with_resolution(bdc.RESOLUTIONS)
@@ -95,7 +95,7 @@ def tile_index_task(
     )
 
 
-@click.command()  # type: ignore[arg-type]
+@click.command()
 @clio.with_tile_size()
 @clio.with_block_size()
 @clio.with_resolution(bdc.RESOLUTIONS.to_list(), allow_all=True)

@@ -1,80 +1,78 @@
-[tool.poetry]
+[project]
 name = "rra-building-density"
 version = "0.0.1"
 description = "Extraction and processing pipelines for a variety of building density products."
 authors = [
-    "James Collins <collijk@uw.edu>",
+    {name = "James Collins", email = "collijk@uw.edu"},
 ]
 license = "BSD-3-Clause"
 readme = "README.md"
-
-documentation = "https://collijk.github.io/rra-building-density"
-homepage = "https://collijk.github.io/rra-building-density"
-repository = "https://github.com/collijk/rra-building-density"
-
-classifiers = [
-  "Development Status :: 4 - Beta",
-  "Intended Audience :: Developers",
-  "Operating System :: OS Independent",
-  "Programming Language :: Python",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Topic :: Software Development :: Libraries :: Python Modules",
-  "Typing :: Typed",
+requires-python = ">=3.12"
+dependencies = [
+    "click>=8.1.8",
+    "requests>=2.32.3",
+    "tqdm>=4.67.1",
+    "rra-tools>=1.0.25",
+    "geopandas>=1.0.1",
+    "shapely>=2.0.6",
+    "contextily>=1.6.2",
+    "matplotlib>=3.10.0",
+    "rasterio>=1.4.3",
+    "scipy>=1.14.1",
+    "seaborn>=0.13.2",
+    "rasterra>=0.6.2",
+    "pydantic>=2.10.4",
+    "pyarrow>=18.1.0",
 ]
 
+[project.urls]
+homepage = "https://ihmeuw.github.io/rra-building-density"
+repository = "https://github.com/ihmeuw/rra-building-density"
+documentation = "https://ihmeuw.github.io/rra-building-density"
+
+[project.scripts]
+bdrun = "rra_building_density.cli:bdrun"
+bdtask = "rra_building_density.cli:bdtask"
+
+[tool.poetry]
 packages = [
     { include = "rra_building_density", from = "src" }
 ]
+requires-poetry = ">=2.0"
 
 [tool.poetry.dependencies]
-python = ">=3.10, <3.13"
-click = "^8.1.8"
-requests = "^2.32.3"
-tqdm = "^4.67.1"
-rra-tools = "^1.0.23"
-geopandas = "^1.0.1"
-shapely = "^2.0.6"
-contextily = "^1.6.2"
-matplotlib = "^3.10.0"
-rasterio = "^1.4.3"
-scipy = "^1.14.1"
-seaborn = "^0.13.2"
-rasterra = "^0.6.1"
-pydantic = "^2.10.4"
-pyarrow = "^18.1.0"
+python = ">=3.12, <4.0"
 
+# We keep the dev dependencies here instead of in the project optional dependencies
+# so they're still installed by default with `poetry install`.
+# They won't be installed or shipped with the package.
 [tool.poetry.group.dev.dependencies]
-mkdocstrings = {version = "*", extras = ["python"]}
-mkdocs-material = "*"
+# Things we want to put a lower bound on
+mypy = "^1.15.0"
+mkdocs-material = "^9.6.0"
+pre-commit = "^4.0.0"
+pytest = "^8.3.0"
+ruff = "^0.9.7"
+# Things we don't care about the version
+mkdocstrings = {extras = ["python"], version = "*"}
 mkdocs-table-reader-plugin = "*"
 mkdocs-gen-files = "*"
 mkdocs-literate-nav = "*"
 mkdocs-section-index = "*"
-mypy = "*"
-pre-commit = "*"
 pymdown-extensions = "*"
-pytest = "*"
 pytest-github-actions-annotate-failures = "*"
 pytest-cov = "*"
 python-kacl = "*"
-ruff = "*"
-types-pyyaml = "^6.0.12.20241230"
-types-requests = "^2.32.0.20241016"
-types-tqdm = "^4.67.0.20241221"
+types-pyyaml = "*"
+types-requests = "*"
+types-tqdm = "*"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=2.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry.scripts]
-bdrun = "rra_building_density.cli:bdrun"
-bdtask = "rra_building_density.cli:bdtask"
-
 [tool.ruff]
-target-version = "py310" # The lowest supported version
+target-version = "py312" # The lowest supported version
 
 [tool.ruff.lint]
 # By default, enable all the lint rules.
@@ -153,9 +151,3 @@ module = [
     "shapely.*",
 ]
 ignore_missing_imports = true
-
-# [[tool.mypy.overrides]]
-# module = [
-#   "tests/my_thing/test_my_thing",
-# ]
-# disallow_untyped_defs = false

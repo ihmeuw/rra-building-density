@@ -65,7 +65,7 @@ def extract_ghsl_main(
     out_zipfile.unlink()
 
 
-@click.command()  # type: ignore[arg-type]
+@click.command()
 @clio.with_measure(bdc.GHSLVersion.measure_map)
 @clio.with_time_point()
 @clio.with_output_directory(bdc.MODEL_ROOT)
@@ -80,7 +80,7 @@ def extract_ghsl_task(
     extract_ghsl_main(measure, time_point, output_dir, progress_bar=progress_bar)
 
 
-@click.command()  # type: ignore[arg-type]
+@click.command()
 @clio.with_measure(bdc.GHSLVersion.measure_map, allow_all=True)
 @clio.with_time_point(allow_all=True)
 @clio.with_output_directory(bdc.MODEL_ROOT)
