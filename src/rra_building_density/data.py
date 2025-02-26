@@ -229,22 +229,6 @@ class BuildingDensityData:
         touch(tile_path, clobber=True)
         save_raster(tile, tile_path)
 
-    def link_tile(
-        self,
-        resolution: int | str,
-        provider: str,
-        block_key: str,
-        time_point: str,
-        measure: str,
-        source_path: Path,
-    ) -> None:
-        self._check_resolution(resolution)
-        dest = self.tile_path(resolution, provider, block_key, time_point, measure)
-        mkdir(dest.parent, exist_ok=True, parents=True)
-        if dest.exists():
-            dest.unlink()
-        dest.symlink_to(source_path)
-
     def load_tile(
         self,
         resolution: int | str,
