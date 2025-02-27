@@ -41,7 +41,7 @@ class BuiltVersion(BaseModel, abc.ABC):
 
 class MicrosoftVersion(BuiltVersion):
     provider: Literal["microsoft"] = "microsoft"
-    version: Literal["v2", "v3", "v4", "v5", "water_mask"]
+    version: Literal["v2", "v3", "v4", "v5", "v6", "water_mask"]
 
     def process_resources(self, resolution: str) -> tuple[str, str]:
         return {
@@ -77,6 +77,14 @@ MICROSOFT_VERSIONS = {
             f"{y}q{q}" for q, y in itertools.product(range(1, 5), range(2020, 2024))
         ][2:],
         input_template="predictions/{time_point}/az_8_ensemble/*",
+        raw_output_template="{time_point}/{tile_key}.tif",
+    ),
+    "6": MicrosoftVersion(
+        version="v6",
+        time_points=[
+            f"{y}q{q}" for q, y in itertools.product(range(1, 5), range(2020, 2024))
+        ][2:],
+        input_template="predictions/{time_point}/az_8_ensemble_v6/*",
         raw_output_template="{time_point}/{tile_key}.tif",
     ),
     "water_mask": MicrosoftVersion(

@@ -34,6 +34,7 @@ def extract_microsoft_indices_main(
         "land_cover": "land_cover_index.gpkg",
         "land_cover_v2": "land_cover_index_v2.gpkg",
         "land_cover_v3": "land_cover_index_v3.gpkg",
+        "ensemble": "v6_ensemble_index.gpkg",
     }
     for index_type, index_file in index_files.items():
         print(f"Caching {index_type} index.")
