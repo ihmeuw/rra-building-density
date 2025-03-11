@@ -65,7 +65,7 @@ plugins:
       scripts:
         - scripts/gen_ref_pages.py
   - literate-nav:
-      nav_vile: SUMMARY.md
+      nav_file: SUMMARY.md
   - section-index
   - mkdocstrings:
       default_handler: python

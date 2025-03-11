@@ -74,16 +74,16 @@ MICROSOFT_VERSIONS = {
     "5": MicrosoftVersion(
         version="v5",
         time_points=[
-            f"{y}q{q}" for q, y in itertools.product(range(1, 5), range(2020, 2024))
-        ][2:],
+            f"{y}q{q}" for y, q in itertools.product(range(2020, 2024), range(1, 5))
+        ][1:],
         input_template="predictions/{time_point}/az_8_ensemble/*",
         raw_output_template="{time_point}/{tile_key}.tif",
     ),
     "6": MicrosoftVersion(
         version="v6",
         time_points=[
-            f"{y}q{q}" for q, y in itertools.product(range(1, 5), range(2020, 2024))
-        ][2:],
+            f"{y}q{q}" for y, q in itertools.product(range(2020, 2024), range(1, 5))
+        ][1:],
         input_template="predictions/{time_point}/az_8_ensemble_v6/*",
         raw_output_template="{time_point}/{tile_key}.tif",
     ),
