@@ -95,6 +95,8 @@ MICROSOFT_VERSIONS = {
     ),
 }
 
+LATEST_MICROSOFT_VERSION = MICROSOFT_VERSIONS["6"]
+
 
 class GHSLVersion(BuiltVersion):
     measure_map: ClassVar[dict[str, tuple[str, str]]] = {

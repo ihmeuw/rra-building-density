@@ -1,15 +1,12 @@
 import click
 import numpy as np
 import rasterra as rt
-from affine import Affine
 from rra_tools import jobmon
 
 from rra_building_density import cli_options as clio
 from rra_building_density import constants as bdc
-from rra_building_density import utils
 from rra_building_density.data import BuildingDensityData
-
-USE_WATER_MASK = False
+from rra_building_density.process import utils
 
 
 def format_microsoft_main(
@@ -25,10 +22,9 @@ def format_microsoft_main(
     tile_index_info = bd_data.load_tile_index_info(resolution)
     msft_index = bd_data.load_provider_index(msft_version, "union")
 
-    block_index = tile_index[tile_index.block_key == block_key]
-    block_poly_series = block_index.dissolve("block_key").geometry
-    block_poly = block_poly_series.iloc[0]
-    block_poly_msft = block_poly_series.to_crs(msft_index.crs).iloc[0]
+    block_poly, block_poly_msft = utils.get_block_polys(
+        tile_index[tile_index.block_key == block_key], msft_index.crs
+    )
 
     block_template = utils.make_raster_template(
         block_poly,
@@ -36,17 +32,9 @@ def format_microsoft_main(
         crs=bdc.CRSES["equal_area"],
     )
 
-    overlapping = msft_index.loc[
-        msft_index.intersects(block_poly_msft), "quad_name"
-    ].tolist()
-
-    msft_tile_keys = [
-        tile_key
-        for tile_key in overlapping
-        if bd_data.provider_tile_exists(
-            msft_version, tile_key=tile_key, time_point=time_point
-        )
-    ]
+    msft_tile_keys = utils.get_provider_tile_keys(
+        msft_index, block_poly_msft, msft_version, bd_data, time_point=time_point
+    )
 
     if not msft_tile_keys:
         print("No overlapping building tiles, likely open ocean.")
@@ -65,31 +53,8 @@ def format_microsoft_main(
         bd_tile = bd_data.load_provider_tile(
             msft_version, tile_key=tile_key, time_point=time_point
         )
-
-        # The resolution of the MSFT tiles has too many decimal points.
-        # This causes tiles slightly west of the antimeridian to cross
-        # over and really mucks up reprojection. We'll clip the values
-        # here to 5 decimal places (ie to 100 microns), explicitly
-        # rounding down. This reduces the width of the tile by
-        # 512*0.0001 = 0.05m or 50cm, enough to fix roundoff issues.
-        x_res, y_res = bd_tile.resolution
-        xmin, xmax, ymin, ymax = bd_tile.bounds
-        bd_tile._transform = Affine(  # noqa: SLF001
-            a=utils.precise_floor(x_res, 4),
-            b=0.0,
-            c=xmin,
-            d=0.0,
-            e=-utils.precise_floor(-y_res, 4),
-            f=ymax,
-        )
+        bd_tile = utils.fix_microsoft_tile(bd_tile)
         bd_tile = bd_tile.unset_no_data_value().set_no_data_value(np.nan)
-        if USE_WATER_MASK:
-            # mask out water
-            mask_version = bdc.MICROSOFT_VERSIONS["water_mask"]
-            mask = bd_data.load_provider_tile(
-                mask_version, tile_key=tile_key
-            ).to_numpy()
-            bd_tile._ndarray[mask] = np.nan  # noqa: SLF001
 
         reprojected_tile = bd_tile.reproject(
             dst_resolution=block_template.x_resolution,
