@@ -2405,14 +2405,14 @@ test = ["boto3 (>=1.2.4)", "fsspec", "hypothesis", "packaging", "pytest (>=2.8.2
 
 [[package]]
 name = "rasterra"
-version = "0.6.2"
+version = "0.6.3"
 description = "A sleek, object-oriented interface designed for intuitive raster data manipulation in Python."
 optional = false
 python-versions = ">=3.12"
 groups = ["main"]
 files = [
-    {file = "rasterra-0.6.2-py3-none-any.whl", hash = "sha256:9b602b4a462ae2c92b5ff4d4e360d7d06c3289a9d3d3e2da5936d8bd802a31d3"},
-    {file = "rasterra-0.6.2.tar.gz", hash = "sha256:b1e0e2d8ff20483b8814e407412e859176a0bfe779beb9934eee985fedbd8cb1"},
+    {file = "rasterra-0.6.3-py3-none-any.whl", hash = "sha256:645c269b02ebe950d6abef7a6e11bfa68d6446329b199137261b6a2d0ef83f88"},
+    {file = "rasterra-0.6.3.tar.gz", hash = "sha256:a7ca63aa50c5a13c1091b300d2ebdfb81e28429cf959ddb064a4d0998c5672d5"},
 ]
 
 [package.dependencies]
@@ -3045,4 +3045,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12, <4.0"
-content-hash = "6a9ce26651b2d730ff055f6cdb59e872abedb7f93314e921051a2c2f8728f8df"
+content-hash = "3609901470c737f6e4515816725c88257806068bc92fe95e980c8bea587dc31b"
