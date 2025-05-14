@@ -151,10 +151,11 @@ class BuildingDensityData:
         self,
         built_version: bdc.BuiltVersion,
         bounds: shapely.Polygon | None = None,
+        band: int | None = None,
         **kwargs: str,
     ) -> rt.RasterArray:
         tile_path = self.provider_tile_path(built_version, **kwargs)
-        return rt.load_raster(tile_path, bounds=bounds)
+        return rt.load_raster(tile_path, bounds=bounds, band=band)
 
     @property
     def tiles(self) -> Path:

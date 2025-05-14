@@ -41,12 +41,13 @@ class BuiltVersion(BaseModel, abc.ABC):
 
 class MicrosoftVersion(BuiltVersion):
     provider: Literal["microsoft"] = "microsoft"
-    version: Literal["v2", "v3", "v4", "v5", "v6", "water_mask"]
+    version: Literal["v2", "v3", "v4", "v5", "v6", "v7", "water_mask"]
+    bands: dict[str, int]
 
     def process_resources(self, resolution: str) -> tuple[str, str]:
         return {
-            RESOLUTIONS.r40: ("3G", "5m"),
-            RESOLUTIONS.r100: ("3G", "20m"),
+            RESOLUTIONS.r40: ("5G", "30m"),
+            RESOLUTIONS.r100: ("8G", "60m"),
         }[RESOLUTIONS(resolution)]
 
 
@@ -58,18 +59,27 @@ MICROSOFT_VERSIONS = {
         ][:-1],
         input_template="predictions/{time_point}/predictions/postprocess_v2/*",
         raw_output_template="{time_point}/{time_point}_{tile_key}.tif",
+        bands={
+            "density": 1,
+        },
     ),
     "3": MicrosoftVersion(
         version="v3",
         time_points=["2023q3"],
         input_template="predictions/{time_point}/predictions/ensemble_v3_pp/*",
         raw_output_template="{time_point}/{time_point}_{tile_key}.tif",
+        bands={
+            "density": 1,
+        },
     ),
     "4": MicrosoftVersion(
         version="v4",
         time_points=["2023q4"],
         input_template="predictions/{time_point}/predictions/v45_ensemble/*",
         raw_output_template="{time_point}/{tile_key}.tif",
+        bands={
+            "density": 1,
+        },
     ),
     "5": MicrosoftVersion(
         version="v5",
@@ -78,6 +88,9 @@ MICROSOFT_VERSIONS = {
         ][1:],
         input_template="predictions/{time_point}/az_8_ensemble/*",
         raw_output_template="{time_point}/{tile_key}.tif",
+        bands={
+            "density": 1,
+        },
     ),
     "6": MicrosoftVersion(
         version="v6",
@@ -86,16 +99,34 @@ MICROSOFT_VERSIONS = {
         ][1:],
         input_template="predictions/{time_point}/az_8_ensemble_v6/*",
         raw_output_template="{time_point}/{tile_key}.tif",
+        bands={
+            "density": 1,
+        },
+    ),
+    "7": MicrosoftVersion(
+        version="v7",
+        time_points=[
+            f"{y}q{q}" for y, q in itertools.product(range(2020, 2024), range(1, 5))
+        ][1:],
+        input_template="predictions/{time_point}/9-37-best_practices_p3_ensemble/*",
+        raw_output_template="{time_point}/{tile_key}.tif",
+        bands={
+            "density": 1,
+            "height": 2,
+        },
     ),
     "water_mask": MicrosoftVersion(
         version="water_mask",
         time_points=[""],
         input_template="permanent_or_seasonal_water/*",
         raw_output_template="{tile_key}.tif",
+        bands={
+            "water_mask": 1,
+        },
     ),
 }
 
-LATEST_MICROSOFT_VERSION = MICROSOFT_VERSIONS["6"]
+LATEST_MICROSOFT_VERSION = MICROSOFT_VERSIONS["7"]
 
 
 class GHSLVersion(BuiltVersion):

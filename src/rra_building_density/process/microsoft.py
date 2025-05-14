@@ -18,62 +18,72 @@ def format_microsoft_main(
 ) -> None:
     msft_version = bdc.MICROSOFT_VERSIONS[version]
     bd_data = BuildingDensityData(output_dir)
+    print("Loading indices")
     tile_index = bd_data.load_tile_index(resolution)
     tile_index_info = bd_data.load_tile_index_info(resolution)
     msft_index = bd_data.load_provider_index(msft_version, "union")
 
+    print("Extracting block polygons")
     block_poly, block_poly_msft = utils.get_block_polys(
         tile_index[tile_index.block_key == block_key], msft_index.crs
     )
 
+    print("Making block template")
     block_template = utils.make_raster_template(
         block_poly,
         resolution=tile_index_info.tile_resolution,
         crs=bdc.CRSES["equal_area"],
     )
 
+    print("Getting provider tile keys")
     msft_tile_keys = utils.get_provider_tile_keys(
         msft_index, block_poly_msft, msft_version, bd_data, time_point=time_point
     )
 
+    print("Checking for no overlapping building tiles")
     if not msft_tile_keys:
         print("No overlapping building tiles, likely open ocean.")
+        for measure in msft_version.bands:
+            bd_data.save_tile(
+                block_template,
+                resolution,
+                provider=msft_version.name,
+                block_key=block_key,
+                time_point=time_point,
+                measure=measure,
+            )
+        return
+
+    for measure, band in msft_version.bands.items():
+        print(f"Loading and processing {len(msft_tile_keys)} {measure} tiles")
+        tiles = []
+        for tile_key in msft_tile_keys:
+            tile = bd_data.load_provider_tile(
+                msft_version, tile_key=tile_key, time_point=time_point, band=band
+            )
+            tile = utils.fix_microsoft_tile(tile)
+            tile = tile.unset_no_data_value().set_no_data_value(np.nan)
+
+            reprojected_tile = tile.reproject(
+                dst_resolution=block_template.x_resolution,
+                dst_crs=block_template.crs,
+                resampling="average",
+            )
+            tiles.append(reprojected_tile)
+
+        print("Merging and resampling tiles")
+        full_tile = rt.merge(tiles, method="first")
+        full_tile = full_tile.resample_to(block_template, "average")
+        full_tile = utils.suppress_noise(full_tile)
+        print(f"Saving {measure} tile")
         bd_data.save_tile(
-            block_template,
+            full_tile,
             resolution,
             provider=msft_version.name,
             block_key=block_key,
             time_point=time_point,
-            measure="density",
+            measure=measure,
         )
-        return
-
-    bd_tiles = []
-    for tile_key in msft_tile_keys:
-        bd_tile = bd_data.load_provider_tile(
-            msft_version, tile_key=tile_key, time_point=time_point
-        )
-        bd_tile = utils.fix_microsoft_tile(bd_tile)
-        bd_tile = bd_tile.unset_no_data_value().set_no_data_value(np.nan)
-
-        reprojected_tile = bd_tile.reproject(
-            dst_resolution=block_template.x_resolution,
-            dst_crs=block_template.crs,
-            resampling="average",
-        )
-        bd_tiles.append(reprojected_tile)
-
-    building_density = rt.merge(bd_tiles, method="first")
-    building_density = building_density.resample_to(block_template, "average")
-    building_density = utils.suppress_noise(building_density)
-    bd_data.save_tile(
-        building_density,
-        resolution,
-        provider=msft_version.name,
-        block_key=block_key,
-        time_point=time_point,
-        measure="density",
-    )
 
 
 @click.command()
