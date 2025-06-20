@@ -106,9 +106,9 @@ MICROSOFT_VERSIONS = {
     "7": MicrosoftVersion(
         version="v7",
         time_points=[
-            f"{y}q{q}" for y, q in itertools.product(range(2020, 2024), range(1, 5))
-        ][1:],
-        input_template="predictions/{time_point}/9-37-best_practices_p3_ensemble/*",
+            f"{y}q{q}" for y, q in itertools.product(range(2020, 2025), range(1, 5))
+        ][1:-2],
+        input_template="predictions/{time_point}/9-37-best_practices_p3_ensemble_corrected/*",
         raw_output_template="{time_point}/{tile_key}.tif",
         bands={
             "density": 1,
