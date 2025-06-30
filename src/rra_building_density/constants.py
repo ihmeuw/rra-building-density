@@ -41,7 +41,7 @@ class BuiltVersion(BaseModel, abc.ABC):
 
 class MicrosoftVersion(BuiltVersion):
     provider: Literal["microsoft"] = "microsoft"
-    version: Literal["v2", "v3", "v4", "v5", "v6", "v7", "water_mask"]
+    version: Literal["v2", "v3", "v4", "v5", "v6", "v7", "v7_1", "v7_e101", "water_mask"]
     bands: dict[str, int]
 
     def process_resources(self, resolution: str) -> tuple[str, str]:
@@ -108,7 +108,27 @@ MICROSOFT_VERSIONS = {
         time_points=[
             f"{y}q{q}" for y, q in itertools.product(range(2020, 2024), range(1, 5))
         ][1:],
-        input_template="predictions/{time_point}/9-37-best_practices_p3_ensemble/*",
+        input_template="predictions/{time_point}/9-37-best_practices_p3_ensemble_corrected/*",
+        raw_output_template="{time_point}/{tile_key}.tif",
+        bands={
+            "density": 1,
+            "height": 2,
+        },
+    ),
+    "7_1": MicrosoftVersion(
+        version="v7_1",
+        time_points=['2020q2', '2024q2'],
+        input_template="predictions/{time_point}/model_v7_ensemble_6-25-25/*",
+        raw_output_template="{time_point}/{tile_key}.tif",
+        bands={
+            "density": 1,
+            "height": 2,
+        },
+    ),
+    "7_e101": MicrosoftVersion(
+        version="v7_e101",
+        time_points=['2023q4'],
+        input_template="predictions/{time_point}/itu_combined_2023q4_6-29-25/*",
         raw_output_template="{time_point}/{tile_key}.tif",
         bands={
             "density": 1,

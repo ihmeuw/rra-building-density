@@ -198,7 +198,7 @@ def extract_microsoft(
             "queue": queue,
             "cores": 3,
             "memory": "10G",
-            "runtime": "240m",
+            "runtime": "360m",
             "project": "proj_rapidresponse",
             "stdout": str(bdc.MODEL_ROOT / "output"),
             "stderr": str(bdc.MODEL_ROOT / "error"),
