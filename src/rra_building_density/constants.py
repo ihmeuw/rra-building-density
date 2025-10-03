@@ -41,7 +41,9 @@ class BuiltVersion(BaseModel, abc.ABC):
 
 class MicrosoftVersion(BuiltVersion):
     provider: Literal["microsoft"] = "microsoft"
-    version: Literal["v2", "v3", "v4", "v5", "v6", "v7", "v7_1", "v7_1_d", "v7_1_h", "water_mask"]
+    version: Literal[
+        "v2", "v3", "v4", "v5", "v6", "v7", "v7_1", "v7_1_d", "v7_1_h", "water_mask"
+    ]
     bands: dict[str, int]
 
     def process_resources(self, resolution: str) -> tuple[str, str]:
