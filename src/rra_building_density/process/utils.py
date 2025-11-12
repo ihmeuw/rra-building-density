@@ -268,6 +268,17 @@ def generate_height_array(
     return height_arr
 
 
+def process_microsoft_height(
+    tile: rt.RasterArray,
+) -> rt.RasterArray:
+    if tile.set_no_data_value(0).to_numpy().max() > 1:
+        msg = "Unexpected - Microsoft height exceeds 1."
+        raise ValueError(msg)
+    tile *= 100
+
+    return tile
+
+
 def generate_proportion_residential_array(
     density_arr: npt.NDArray[np.floating[Any]],
     nonresidential_density_arr: npt.NDArray[np.floating[Any]],

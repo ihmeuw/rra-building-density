@@ -74,7 +74,14 @@ def format_microsoft_main(
         print("Merging and resampling tiles")
         full_tile = rt.merge(tiles, method="first")
         full_tile = full_tile.resample_to(block_template, "average")
+        if measure == "height":
+            print("Scaling height to meters")
+            full_tile = utils.process_microsoft_height(full_tile)
+        elif measure != "density":
+            msg = f"Unexpected Microsoft measure: {measure}"
+            raise ValueError(msg)
         full_tile = utils.suppress_noise(full_tile)
+
         print(f"Saving {measure} tile")
         bd_data.save_tile(
             full_tile,

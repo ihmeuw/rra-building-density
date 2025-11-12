@@ -120,7 +120,7 @@ MICROSOFT_VERSIONS = {
     "7_1": MicrosoftVersion(
         version="v7_1",
         time_points=[
-            f"{y}q{q}" for y, q in itertools.product(range(2020, 2025), range(1, 5))
+            f"{y}q{q}" for y, q in itertools.product(range(2020, 2026), range(1, 5))
         ][1:-2],
         input_template="predictions/{time_point}/v7_ensemble_7-3-25/*",
         raw_output_template="{time_point}/{tile_key}.tif",
