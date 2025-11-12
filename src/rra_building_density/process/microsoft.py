@@ -78,7 +78,8 @@ def format_microsoft_main(
             print("Scaling height to meters")
             full_tile = utils.process_microsoft_height(full_tile)
         elif measure != "density":
-            raise ValueError(f"Unexpected Microsoft measure: {measure}")
+            msg = f"Unexpected Microsoft measure: {measure}"
+            raise ValueError(msg)
         full_tile = utils.suppress_noise(full_tile)
 
         print(f"Saving {measure} tile")

@@ -272,7 +272,8 @@ def process_microsoft_height(
     tile: rt.RasterArray,
 ) -> rt.RasterArray:
     if tile.set_no_data_value(0).to_numpy().max() > 1:
-        raise ValueError("Unexpected - Microsoft height exceeds 1.")
+        msg = "Unexpected - Microsoft height exceeds 1."
+        raise ValueError(msg)
     tile *= 100
 
     return tile
