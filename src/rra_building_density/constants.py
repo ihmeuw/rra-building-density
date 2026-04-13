@@ -42,14 +42,14 @@ class BuiltVersion(BaseModel, abc.ABC):
 class MicrosoftVersion(BuiltVersion):
     provider: Literal["microsoft"] = "microsoft"
     version: Literal[
-        "v2", "v3", "v4", "v5", "v6", "v7", "v7_1", "v7_1_d", "v7_1_h", "water_mask"
+        "v2", "v3", "v4", "v5", "v6", "v7", "v7_1", "v7_1_d", "v7_1_h", "v8", "water_mask"
     ]
     bands: dict[str, int]
 
     def process_resources(self, resolution: str) -> tuple[str, str]:
         return {
-            RESOLUTIONS.r40: ("5G", "30m"),
-            RESOLUTIONS.r100: ("8G", "60m"),
+            RESOLUTIONS.r40: ("4G", "10m"),
+            RESOLUTIONS.r100: ("4G", "15m"),
         }[RESOLUTIONS(resolution)]
 
 
@@ -151,6 +151,18 @@ MICROSOFT_VERSIONS = {
             "height": 2,
         },
     ),
+    "8": MicrosoftVersion(
+        version="v8",
+        time_points=[
+            f"{y}q{q}" for y, q in itertools.product(range(2020, 2027), range(1, 5))
+        ][1:-3],
+        input_template="predictions/{time_point}/12-39-p3_ensemble/*",
+        raw_output_template="{time_point}/{tile_key}.tif",
+        bands={
+            "density": 1,
+            "height": 2,
+        },
+    ),
     "water_mask": MicrosoftVersion(
         version="water_mask",
         time_points=[""],
@@ -162,7 +174,7 @@ MICROSOFT_VERSIONS = {
     ),
 }
 
-LATEST_MICROSOFT_VERSION = MICROSOFT_VERSIONS["7_1"]
+LATEST_MICROSOFT_VERSION = MICROSOFT_VERSIONS["8"]
 
 
 class GHSLVersion(BuiltVersion):
