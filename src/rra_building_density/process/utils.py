@@ -8,6 +8,7 @@ import rasterra as rt
 import shapely
 from affine import Affine
 from pyproj import Transformer
+from rasterio.warp import transform_bounds
 
 from rra_building_density import constants as bdc
 from rra_building_density.data import BuildingDensityData
@@ -57,6 +58,54 @@ def make_raster_template(
         f=np.round(ymax, 2),
     )
     return rt.RasterArray(data, transform, crs=crs.to_pyproj(), no_data_value=np.nan)
+
+
+def make_template_window(
+    template: rt.RasterArray,
+    tile: rt.RasterArray,
+) -> rt.RasterArray | None:
+    """Build an empty raster on the template's exact grid covering a tile's footprint.
+
+    Using this as a reprojection target makes every tile land on the template's
+    pixel grid: merged tiles then differ by whole-pixel offsets (no sub-pixel
+    snapping) and the final resample to the template is an exact crop. Returns
+    None if the tile's reprojected bounds fall entirely outside the template.
+
+    Parameters
+    ----------
+    template
+        The raster whose grid and extent define the destination.
+    tile
+        The tile to be reprojected, in its native CRS.
+
+    Returns
+    -------
+    rt.RasterArray | None
+        An empty raster on the template's grid covering the tile, or None.
+    """
+    xmin, ymin, xmax, ymax = transform_bounds(
+        tile.crs, template.crs, tile.x_min, tile.y_min, tile.x_max, tile.y_max
+    )
+    res = template.x_resolution
+    col_start = max(int(np.floor((xmin - template.x_min) / res)), 0)
+    col_stop = min(int(np.ceil((xmax - template.x_min) / res)), template.width)
+    row_start = max(int(np.floor((template.y_max - ymax) / res)), 0)
+    row_stop = min(int(np.ceil((template.y_max - ymin) / res)), template.height)
+    if col_stop <= col_start or row_stop <= row_start:
+        return None
+
+    data = np.full(
+        (row_stop - row_start, col_stop - col_start), np.nan, dtype=np.float32
+    )
+    transform = Affine(
+        a=res,
+        b=0,
+        c=template.x_min + col_start * res,
+        d=0,
+        e=-res,
+        f=template.y_max - row_start * res,
+    )
+    return rt.RasterArray(data, transform, crs=template.crs, no_data_value=np.nan)
 
 
 def suppress_noise(

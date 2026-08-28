@@ -148,6 +148,7 @@ exclude = [
 module = [
     "affine.*",
     "geopandas.*",
+    "rasterio.*",
     "shapely.*",
 ]
 ignore_missing_imports = true
