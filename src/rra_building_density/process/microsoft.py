@@ -229,6 +229,7 @@ def format_microsoft(
             "runtime": runtime,
             "project": "proj_rapidresponse",
         },
+        concurrency_limit=1000,
         log_root=bd_data.log_dir("process_microsoft"),
         max_attempts=3,
     )
