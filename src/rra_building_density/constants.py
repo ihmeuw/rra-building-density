@@ -48,8 +48,8 @@ class MicrosoftVersion(BuiltVersion):
 
     def process_resources(self, resolution: str) -> tuple[str, str]:
         return {
-            RESOLUTIONS.r40: ("6G", "10m"),
-            RESOLUTIONS.r100: ("6G", "15m"),
+            RESOLUTIONS.r40: ("6G", "30m"),
+            RESOLUTIONS.r100: ("6G", "45m"),
         }[RESOLUTIONS(resolution)]
 
 
