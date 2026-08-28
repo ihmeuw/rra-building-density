@@ -54,6 +54,7 @@ def format_microsoft_main(
             )
         return
 
+    density_block = None
     for measure, band in msft_version.bands.items():
         print(f"Loading and processing {len(msft_tile_keys)} {measure} tiles")
         tiles = []
@@ -62,12 +63,28 @@ def format_microsoft_main(
                 msft_version, tile_key=tile_key, time_point=time_point, band=band
             )
             tile = utils.fix_microsoft_tile(tile)
-            # The raw tiles tag -1 (water) as nodata, but water carries no
-            # buildings: count it as zero in the average like unbuilt land
-            # (set_no_data_value converts pixels matching the tagged nodata).
-            # Then adopt NaN as the working nodata so cells outside tile
-            # coverage stay unmodeled rather than zero-filled.
+            # set_no_data_value converts pixels matching the currently tagged
+            # nodata to the new value. The raw tiles tag -1 (water), and water
+            # carries no buildings, so convert it to zero like unbuilt land.
+            # The tag is then 0.0, so it must be unset (not converted!) before
+            # adopting NaN as the working nodata, which reproject uses to keep
+            # cells outside tile coverage unmodeled rather than zero-filled.
             tile = tile.set_no_data_value(0.0)
+            if measure == "height":
+                # Raw height is 0 wherever there are no buildings, so a plain
+                # average dilutes it by the unbuilt fraction of the cell.
+                # Aggregate height * density instead and divide the block by
+                # the density block below, making the block value the
+                # building-area-weighted mean height, sum(h*d)/sum(d).
+                density_tile = utils.fix_microsoft_tile(
+                    bd_data.load_provider_tile(
+                        msft_version,
+                        tile_key=tile_key,
+                        time_point=time_point,
+                        band=msft_version.bands["density"],
+                    )
+                )
+                tile = tile * density_tile.set_no_data_value(0.0)
             tile = tile.unset_no_data_value().set_no_data_value(np.nan)
 
             reprojected_tile = tile.reproject(
@@ -81,12 +98,27 @@ def format_microsoft_main(
         full_tile = rt.merge(tiles, method="first")
         full_tile = full_tile.resample_to(block_template, "average")
         if measure == "height":
-            print("Scaling height to meters")
+            if density_block is None:
+                msg = "Density must be processed before height."
+                raise RuntimeError(msg)
+            print("Dividing out density and scaling height to meters")
+            height_arr = full_tile.to_numpy().astype(np.float32, copy=False)
+            built = density_block > 0
+            height_arr[built] = height_arr[built] / density_block[built]
+            # Cells with no (or suppressed) density have no buildings: height
+            # is 0 there, matching the saved density. NaN stays NaN outside
+            # tile coverage.
+            height_arr[density_block == 0] = 0.0
+            full_tile = rt.RasterArray(
+                height_arr, full_tile.transform, crs=full_tile.crs, no_data_value=np.nan
+            )
             full_tile = utils.process_microsoft_height(full_tile)
         elif measure != "density":
             msg = f"Unexpected Microsoft measure: {measure}"
             raise ValueError(msg)
         full_tile = utils.suppress_noise(full_tile)
+        if measure == "density":
+            density_block = full_tile.to_numpy().astype(np.float32, copy=False)
 
         print(f"Saving {measure} tile")
         bd_data.save_tile(
