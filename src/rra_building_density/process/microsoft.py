@@ -62,6 +62,12 @@ def format_microsoft_main(
                 msft_version, tile_key=tile_key, time_point=time_point, band=band
             )
             tile = utils.fix_microsoft_tile(tile)
+            # The raw tiles tag -1 (water) as nodata, but water carries no
+            # buildings: count it as zero in the average like unbuilt land
+            # (set_no_data_value converts pixels matching the tagged nodata).
+            # Then adopt NaN as the working nodata so cells outside tile
+            # coverage stay unmodeled rather than zero-filled.
+            tile = tile.set_no_data_value(0.0)
             tile = tile.unset_no_data_value().set_no_data_value(np.nan)
 
             reprojected_tile = tile.reproject(
