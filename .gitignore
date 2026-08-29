@@ -78,5 +78,6 @@ venv.bak/
 # IDEs
 .idea/
 
-# jupyter scratch space
+# jupyter and claude scratch space
 notebooks/
+.claude/
