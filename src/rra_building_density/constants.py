@@ -155,7 +155,7 @@ MICROSOFT_VERSIONS = {
         version="v8",
         time_points=[
             f"{y}q{q}" for y, q in itertools.product(range(2020, 2027), range(1, 5))
-        ][1:-3],
+        ][1:-2],
         input_template="predictions/{time_point}/12-39-p3_ensemble/*",
         raw_output_template="{time_point}/{tile_key}.tif",
         bands={
